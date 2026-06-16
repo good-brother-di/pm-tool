@@ -10,6 +10,8 @@ export async function GET() {
     return NextResponse.json(projects);
   } catch (err) {
     console.error("GET /api/projects error:", err);
+    console.error("DATABASE_URL:", process.env.DATABASE_URL ? "set" : "NOT SET");
+    console.error("Error details:", err instanceof Error ? err.message : String(err));
     return NextResponse.json({ error: "获取项目列表失败" }, { status: 500 });
   }
 }
@@ -30,6 +32,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(project, { status: 201 });
   } catch (err) {
     console.error("POST /api/projects error:", err);
+    console.error("Error details:", err instanceof Error ? err.message : String(err));
     return NextResponse.json({ error: "创建项目失败" }, { status: 500 });
   }
 }

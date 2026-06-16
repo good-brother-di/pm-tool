@@ -7,26 +7,28 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function getDatabaseUrl(): string {
-  const url = process.env.DATABASE_URL;
-  if (url && url.trim()) return url.trim();
+  let url = process.env.DATABASE_URL;
+  if (!url || !url.trim()) {
+    // Default: local SQLite
+    const dbPath = path.resolve(process.cwd(), "prisma", "pm-tool.db");
+    return `file:${dbPath}`;
+  }
+  url = url.trim();
 
-  // Default: local SQLite
-  const dbPath = path.resolve(process.cwd(), "prisma", "pm-tool.db");
-  return `file:${dbPath}`;
-}
+  // If a separate auth token is provided and URL doesn't already have one,
+  // append it as a query parameter
+  const authToken = process.env.DATABASE_AUTH_TOKEN?.trim();
+  if (authToken && !url.includes("authToken=")) {
+    const sep = url.includes("?") ? "&" : "?";
+    url = `${url}${sep}authToken=${authToken}`;
+  }
 
-function getAuthToken(): string | undefined {
-  return process.env.DATABASE_AUTH_TOKEN || undefined;
+  return url;
 }
 
 function createPrismaClient(): PrismaClient {
   const dbUrl = getDatabaseUrl();
-  const authToken = getAuthToken();
-
-  const adapter = authToken
-    ? new PrismaLibSql({ url: dbUrl, authToken })
-    : new PrismaLibSql({ url: dbUrl });
-
+  const adapter = new PrismaLibSql({ url: dbUrl });
   return new PrismaClient({ adapter });
 }
 
