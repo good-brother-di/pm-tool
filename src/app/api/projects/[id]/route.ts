@@ -54,7 +54,17 @@ export async function DELETE(
 ) {
   try {
     const { id } = await context.params;
+
+    // Check project exists first
+    const existing = await prisma.project.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: "项目不存在" }, { status: 404 });
+    }
+
+    // Cascade: delete all tasks of this project, then delete project
+    await prisma.task.deleteMany({ where: { projectId: id } });
     await prisma.project.delete({ where: { id } });
+
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("DELETE /api/projects/[id] error:", err);

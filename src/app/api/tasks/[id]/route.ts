@@ -28,15 +28,17 @@ export async function PATCH(
 
     const task = await prisma.task.update({ where: { id }, data });
 
-    // Log activity for status changes
-    if (body.status || body.title) {
+    // Log activity for status/title changes (use !== undefined, not truthy check)
+    const hasStatusChange = body.status !== undefined;
+    const hasTitleChange = body.title !== undefined;
+    if (hasStatusChange || hasTitleChange) {
       try {
         const detailParts: string[] = [];
-        if (body.status) detailParts.push(`状态 → ${body.status}`);
-        if (body.title) detailParts.push("标题已更新");
+        if (hasStatusChange) detailParts.push(`状态 → ${body.status}`);
+        if (hasTitleChange) detailParts.push("标题已更新");
         await prisma.activityLog.create({
           data: {
-            action: body.status ? "moved" : "updated",
+            action: hasStatusChange ? "moved" : "updated",
             entityType: "task",
             entityId: task.id,
             entityName: body.title || task.title,

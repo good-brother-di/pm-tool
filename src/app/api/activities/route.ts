@@ -5,13 +5,14 @@ export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url, "http://localhost");
     const projectId = url.searchParams.get("projectId");
-    const limit = parseInt(url.searchParams.get("limit") || "50");
+    const limitRaw = parseInt(url.searchParams.get("limit") || "50");
+    const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(limitRaw, 200)) : 50;
 
     const where = projectId ? { projectId } : {};
     const activities = await prisma.activityLog.findMany({
       where,
       orderBy: { createdAt: "desc" },
-      take: Math.min(limit, 200),
+      take: limit,
     });
     return NextResponse.json(activities);
   } catch (err) {

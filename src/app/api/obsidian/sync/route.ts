@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import * as fs from "node:fs";
-import * as path from "node:path";
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,12 +21,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    // Obsidian vault path
-    const vaultPath = body.vaultPath || "D:/严能的个人知识库";
+    // Obsidian vault path — use env var or default
+    const vaultPath = process.env.OBSIDIAN_VAULT_PATH || body.vaultPath;
+    if (!vaultPath) {
+      return NextResponse.json({
+        error: "未配置 Obsidian 知识库路径。请在 .env 中设置 OBSIDIAN_VAULT_PATH",
+      }, { status: 400 });
+    }
+
     const pmDir = path.join(vaultPath, "05-项目管理", "01-看板");
 
-    // Ensure directory exists
-    fs.mkdirSync(pmDir, { recursive: true });
+    // Ensure directory exists (async)
+    await mkdir(pmDir, { recursive: true });
 
     const statusLabels: Record<string, string> = {
       todo: "待办", in_progress: "进行中", blocked: "阻塞", done: "已完成",
@@ -80,10 +86,10 @@ synced: "${now}"
 \`\`\`
 %%\n`;
 
-    // Write to Obsidian vault
+    // Write to Obsidian vault (async)
     const safeName = project.name.replace(/[<>:"/\\|?*]/g, "-");
     const filePath = path.join(pmDir, `pm-${safeName}-看板.md`);
-    fs.writeFileSync(filePath, md, "utf-8");
+    await writeFile(filePath, md, "utf-8");
 
     return NextResponse.json({
       success: true,

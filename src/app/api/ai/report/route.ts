@@ -65,33 +65,47 @@ ${taskList}
       return NextResponse.json({ error: "DeepSeek API key not configured" }, { status: 500 });
     }
 
-    const aiRes = await fetch("https://api.deepseek.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "deepseek-chat",
-        messages: [
-          { role: "system", content: "你是一个专业的项目管理助手，生成中文周报。" },
-          { role: "user", content: prompt },
-        ],
-        temperature: 0.7,
-        max_tokens: 1500,
-      }),
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
 
-    if (!aiRes.ok) {
-      const errText = await aiRes.text();
-      console.error("DeepSeek API error:", errText);
-      return NextResponse.json({ error: "AI service error" }, { status: 502 });
+    try {
+      const aiRes = await fetch("https://api.deepseek.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "deepseek-v4-flash",
+          messages: [
+            { role: "system", content: "你是一个专业的项目管理助手，生成中文周报。" },
+            { role: "user", content: prompt },
+          ],
+          temperature: 0.7,
+          max_tokens: 1500,
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeout);
+
+      if (!aiRes.ok) {
+        const errText = await aiRes.text();
+        console.error("DeepSeek API error:", errText);
+        return NextResponse.json({ error: "AI service error" }, { status: 502 });
+      }
+
+      const aiData = await aiRes.json();
+      const report = aiData.choices?.[0]?.message?.content || "AI 未能生成报告";
+
+      return NextResponse.json({ report });
+    } catch (err: unknown) {
+      clearTimeout(timeout);
+      if (err instanceof Error && err.name === "AbortError") {
+        return NextResponse.json({ error: "AI 服务响应超时，请稍后重试" }, { status: 504 });
+      }
+      throw err;
     }
-
-    const aiData = await aiRes.json();
-    const report = aiData.choices?.[0]?.message?.content || "AI 未能生成报告";
-
-    return NextResponse.json({ report });
   } catch (err) {
     console.error("AI report error:", err);
     return NextResponse.json({ error: "Report generation failed" }, { status: 500 });

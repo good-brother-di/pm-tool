@@ -36,6 +36,17 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Calculate next sortOrder for the given status
+    let sortOrder = body.sortOrder;
+    if (sortOrder === undefined || sortOrder === null) {
+      const maxTask = await prisma.task.findFirst({
+        where: { projectId: body.projectId, status: body.status || "todo" },
+        orderBy: { sortOrder: "desc" },
+        select: { sortOrder: true },
+      });
+      sortOrder = (maxTask?.sortOrder ?? -1) + 1;
+    }
+
     const task = await prisma.task.create({
       data: {
         title: body.title.trim().slice(0, 500),
@@ -45,7 +56,7 @@ export async function POST(req: NextRequest) {
         projectId: body.projectId,
         dueDate,
         tags: JSON.stringify(body.tags || []),
-        sortOrder: body.sortOrder ?? 0,
+        sortOrder,
       },
     });
     // Log activity

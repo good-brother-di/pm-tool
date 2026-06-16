@@ -1,0 +1,3012 @@
+============================================================
+软件名称：PM Tool 项目管理软件
+总行数：4156
+提交前30页（1500行）+ 后30页（1500行）
+============================================================
+
+【前30页 — 源代码前半部分】
+
+    1 | generator client {
+    2 |   provider = "prisma-client"
+    3 |   output   = "../src/generated/prisma"
+    4 | }
+    5 | 
+    6 | datasource db {
+    7 |   provider = "sqlite"
+    8 | }
+    9 | 
+   10 | model Project {
+   11 |   id          String        @id @default(cuid())
+   12 |   name        String
+   13 |   description String?
+   14 |   color       String        @default("#6366f1")
+   15 |   status      String        @default("active")
+   16 |   sortOrder   Int           @default(0)
+   17 |   createdAt   DateTime      @default(now())
+   18 |   updatedAt   DateTime      @updatedAt
+   19 |   tasks       Task[]
+   20 |   activities  ActivityLog[]
+   21 | }
+   22 | 
+   23 | model Task {
+   24 |   id          String        @id @default(cuid())
+   25 |   title       String
+   26 |   description String?
+   27 |   status      String        @default("todo")
+   28 |   priority    String        @default("medium")
+   29 |   dueDate     DateTime?
+   30 |   tags        String        @default("[]")
+   31 |   sortOrder   Int           @default(0)
+   32 |   projectId   String
+   33 |   project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+   34 |   parentId    String?
+   35 |   parent      Task?         @relation("SubTasks", fields: [parentId], references: [id])
+   36 |   children    Task[]        @relation("SubTasks")
+   37 |   createdAt   DateTime      @default(now())
+   38 |   updatedAt   DateTime      @updatedAt
+   39 |   activities  ActivityLog[]
+   40 | }
+   41 | 
+   42 | model ActivityLog {
+   43 |   id         String   @id @default(cuid())
+   44 |   action     String   // created | updated | deleted | moved | completed
+   45 |   entityType String   // project | task
+   46 |   entityId   String
+   47 |   entityName String   // name/title of the entity for display
+   48 |   detail     String?  // e.g. "status: todo → in_progress"
+   49 |   projectId  String?
+   50 |   project    Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+   51 |   taskId     String?
+   52 |   task       Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+   53 |   createdAt  DateTime @default(now())
+   54 | }
+   55 | @import "tailwindcss";
+   56 | @import "tw-animate-css";
+   57 | @import "shadcn/tailwind.css";
+   58 | 
+   59 | @custom-variant dark (&:is(.dark *));
+   60 | 
+   61 | @theme inline {
+   62 |   --color-background: var(--background);
+   63 |   --color-foreground: var(--foreground);
+   64 |   --font-sans: var(--font-sans);
+   65 |   --font-mono: var(--font-geist-mono);
+   66 |   --font-heading: var(--font-sans);
+   67 |   --color-sidebar-ring: var(--sidebar-ring);
+   68 |   --color-sidebar-border: var(--sidebar-border);
+   69 |   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+   70 |   --color-sidebar-accent: var(--sidebar-accent);
+   71 |   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+   72 |   --color-sidebar-primary: var(--sidebar-primary);
+   73 |   --color-sidebar-foreground: var(--sidebar-foreground);
+   74 |   --color-sidebar: var(--sidebar);
+   75 |   --color-chart-5: var(--chart-5);
+   76 |   --color-chart-4: var(--chart-4);
+   77 |   --color-chart-3: var(--chart-3);
+   78 |   --color-chart-2: var(--chart-2);
+   79 |   --color-chart-1: var(--chart-1);
+   80 |   --color-ring: var(--ring);
+   81 |   --color-input: var(--input);
+   82 |   --color-border: var(--border);
+   83 |   --color-destructive: var(--destructive);
+   84 |   --color-accent-foreground: var(--accent-foreground);
+   85 |   --color-accent: var(--accent);
+   86 |   --color-muted-foreground: var(--muted-foreground);
+   87 |   --color-muted: var(--muted);
+   88 |   --color-secondary-foreground: var(--secondary-foreground);
+   89 |   --color-secondary: var(--secondary);
+   90 |   --color-primary-foreground: var(--primary-foreground);
+   91 |   --color-primary: var(--primary);
+   92 |   --color-popover-foreground: var(--popover-foreground);
+   93 |   --color-popover: var(--popover);
+   94 |   --color-card-foreground: var(--card-foreground);
+   95 |   --color-card: var(--card);
+   96 |   --radius-sm: calc(var(--radius) * 0.6);
+   97 |   --radius-md: calc(var(--radius) * 0.8);
+   98 |   --radius-lg: var(--radius);
+   99 |   --radius-xl: calc(var(--radius) * 1.4);
+  100 |   --radius-2xl: calc(var(--radius) * 1.8);
+  101 |   --radius-3xl: calc(var(--radius) * 2.2);
+  102 |   --radius-4xl: calc(var(--radius) * 2.6);
+  103 | }
+  104 | 
+  105 | :root {
+  106 |   --background: oklch(1 0 0);
+  107 |   --foreground: oklch(0.145 0 0);
+  108 |   --card: oklch(1 0 0);
+  109 |   --card-foreground: oklch(0.145 0 0);
+  110 |   --popover: oklch(1 0 0);
+  111 |   --popover-foreground: oklch(0.145 0 0);
+  112 |   --primary: oklch(0.205 0 0);
+  113 |   --primary-foreground: oklch(0.985 0 0);
+  114 |   --secondary: oklch(0.97 0 0);
+  115 |   --secondary-foreground: oklch(0.205 0 0);
+  116 |   --muted: oklch(0.97 0 0);
+  117 |   --muted-foreground: oklch(0.556 0 0);
+  118 |   --accent: oklch(0.97 0 0);
+  119 |   --accent-foreground: oklch(0.205 0 0);
+  120 |   --destructive: oklch(0.577 0.245 27.325);
+  121 |   --border: oklch(0.922 0 0);
+  122 |   --input: oklch(0.922 0 0);
+  123 |   --ring: oklch(0.708 0 0);
+  124 |   --chart-1: oklch(0.87 0 0);
+  125 |   --chart-2: oklch(0.556 0 0);
+  126 |   --chart-3: oklch(0.439 0 0);
+  127 |   --chart-4: oklch(0.371 0 0);
+  128 |   --chart-5: oklch(0.269 0 0);
+  129 |   --radius: 0.625rem;
+  130 |   --sidebar: oklch(0.985 0 0);
+  131 |   --sidebar-foreground: oklch(0.145 0 0);
+  132 |   --sidebar-primary: oklch(0.205 0 0);
+  133 |   --sidebar-primary-foreground: oklch(0.985 0 0);
+  134 |   --sidebar-accent: oklch(0.97 0 0);
+  135 |   --sidebar-accent-foreground: oklch(0.205 0 0);
+  136 |   --sidebar-border: oklch(0.922 0 0);
+  137 |   --sidebar-ring: oklch(0.708 0 0);
+  138 | }
+  139 | 
+  140 | .dark {
+  141 |   --background: oklch(0.145 0 0);
+  142 |   --foreground: oklch(0.985 0 0);
+  143 |   --card: oklch(0.205 0 0);
+  144 |   --card-foreground: oklch(0.985 0 0);
+  145 |   --popover: oklch(0.205 0 0);
+  146 |   --popover-foreground: oklch(0.985 0 0);
+  147 |   --primary: oklch(0.922 0 0);
+  148 |   --primary-foreground: oklch(0.205 0 0);
+  149 |   --secondary: oklch(0.269 0 0);
+  150 |   --secondary-foreground: oklch(0.985 0 0);
+  151 |   --muted: oklch(0.269 0 0);
+  152 |   --muted-foreground: oklch(0.708 0 0);
+  153 |   --accent: oklch(0.269 0 0);
+  154 |   --accent-foreground: oklch(0.985 0 0);
+  155 |   --destructive: oklch(0.704 0.191 22.216);
+  156 |   --border: oklch(1 0 0 / 10%);
+  157 |   --input: oklch(1 0 0 / 15%);
+  158 |   --ring: oklch(0.556 0 0);
+  159 |   --chart-1: oklch(0.87 0 0);
+  160 |   --chart-2: oklch(0.556 0 0);
+  161 |   --chart-3: oklch(0.439 0 0);
+  162 |   --chart-4: oklch(0.371 0 0);
+  163 |   --chart-5: oklch(0.269 0 0);
+  164 |   --sidebar: oklch(0.205 0 0);
+  165 |   --sidebar-foreground: oklch(0.985 0 0);
+  166 |   --sidebar-primary: oklch(0.488 0.243 264.376);
+  167 |   --sidebar-primary-foreground: oklch(0.985 0 0);
+  168 |   --sidebar-accent: oklch(0.269 0 0);
+  169 |   --sidebar-accent-foreground: oklch(0.985 0 0);
+  170 |   --sidebar-border: oklch(1 0 0 / 10%);
+  171 |   --sidebar-ring: oklch(0.556 0 0);
+  172 | }
+  173 | 
+  174 | @layer base {
+  175 |   * {
+  176 |     @apply border-border outline-ring/50;
+  177 |   }
+  178 |   body {
+  179 |     @apply bg-background text-foreground;
+  180 |   }
+  181 |   html {
+  182 |     @apply font-sans;
+  183 |   }
+  184 | }  185 | import "./globals.css";
+  186 | import type { Metadata } from "next";
+  187 | import { ThemeProvider } from "@/components/theme-provider";
+  188 | import { Sidebar } from "@/components/sidebar";
+  189 | 
+  190 | export const metadata: Metadata = {
+  191 |   title: "PM Tool — 项目管理",
+  192 |   description: "轻量级项目管理看板工具",
+  193 | };
+  194 | 
+  195 | export default function RootLayout({
+  196 |   children,
+  197 | }: {
+  198 |   children: React.ReactNode;
+  199 | }) {
+  200 |   return (
+  201 |     <html lang="zh-CN" suppressHydrationWarning>
+  202 |       <body className="antialiased">
+  203 |         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+  204 |           <div className="flex h-screen bg-gray-50 dark:bg-gray-950">
+  205 |             <Sidebar />
+  206 |             <main className="flex-1 overflow-hidden">{children}</main>
+  207 |           </div>
+  208 |         </ThemeProvider>
+  209 |       </body>
+  210 |     </html>
+  211 |   );
+  212 | }
+  213 | "use client";
+  214 | 
+  215 | import { useState, useEffect } from "react";
+  216 | import Link from "next/link";
+  217 | import { FolderKanban, CheckCircle2, AlertTriangle } from "lucide-react";
+  218 | import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+  219 | import { Badge } from "@/components/ui/badge";
+  220 | import { ScrollArea } from "@/components/ui/scroll-area";
+  221 | import { Skeleton } from "@/components/ui/skeleton";
+  222 | import { startOfDay } from "date-fns";
+  223 | import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+  224 | import type { Project, Task } from "@/types";
+  225 | 
+  226 | const STATUS_COLORS: Record<string, string> = {
+  227 |   todo: "#94a3b8",
+  228 |   in_progress: "#3b82f6",
+  229 |   blocked: "#ef4444",
+  230 |   done: "#22c55e",
+  231 | };
+  232 | 
+  233 | const STATUS_LABEL_MAP: Record<string, string> = {
+  234 |   todo: "待办",
+  235 |   in_progress: "进行中",
+  236 |   blocked: "阻塞",
+  237 |   done: "已完成",
+  238 | };
+  239 | 
+  240 | export default function DashboardPage() {
+  241 |   const [projects, setProjects] = useState<Project[]>([]);
+  242 |   const [tasks, setTasks] = useState<Task[]>([]);
+  243 |   const [loading, setLoading] = useState(true);
+  244 |   const [error, setError] = useState<string | null>(null);
+  245 | 
+  246 |   useEffect(() => {
+  247 |     let cancelled = false;
+  248 |     async function load() {
+  249 |       try {
+  250 |         const [projRes, taskRes] = await Promise.all([
+  251 |           fetch("/api/projects"),
+  252 |           fetch("/api/tasks"),
+  253 |         ]);
+  254 |         if (!projRes.ok || !taskRes.ok) throw new Error("加载失败");
+  255 |         const [projData, taskData] = await Promise.all([projRes.json(), taskRes.json()]);
+  256 |         if (!cancelled) { setProjects(projData); setTasks(taskData); setError(null); }
+  257 |       } catch (err) {
+  258 |         if (!cancelled) { console.error("Dashboard load failed:", err); setError("数据加载失败，请刷新重试"); }
+  259 |       } finally {
+  260 |         if (!cancelled) setLoading(false);
+  261 |       }
+  262 |     }
+  263 |     load();
+  264 |     return () => { cancelled = true; };
+  265 |   }, []);
+  266 | 
+  267 |   const allTasks = tasks;
+  268 |   const todoTasks = allTasks.filter((t) => t.status === "todo");
+  269 |   const blockedTasks = allTasks.filter((t) => t.status === "blocked");
+  270 |   const doneTasks = allTasks.filter((t) => t.status === "done");
+  271 |   const inProgressTasks = allTasks.filter((t) => t.status === "in_progress");
+  272 | 
+  273 |   const todayStart = startOfDay(new Date());
+  274 |   const overdueTasks = allTasks.filter((t) => {
+  275 |     if (!t.dueDate || t.status === "done") return false;
+  276 |     return new Date(t.dueDate) < todayStart;
+  277 |   });
+  278 |   const blockedIds = new Set(blockedTasks.map((t) => t.id));
+  279 |   const overdueOnly = overdueTasks.filter((t) => !blockedIds.has(t.id));
+  280 | 
+  281 |   // Pie chart data
+  282 |   const pieData = [
+  283 |     { name: "待办", value: todoTasks.length, color: STATUS_COLORS.todo },
+  284 |     { name: "进行中", value: inProgressTasks.length, color: STATUS_COLORS.in_progress },
+  285 |     { name: "阻塞", value: blockedTasks.length, color: STATUS_COLORS.blocked },
+  286 |     { name: "已完成", value: doneTasks.length, color: STATUS_COLORS.done },
+  287 |   ].filter((d) => d.value > 0);
+  288 | 
+  289 |   if (loading) {
+  290 |     return (
+  291 |       <div className="p-6 max-w-5xl mx-auto space-y-6">
+  292 |         <Skeleton className="h-8 w-32" />
+  293 |         <div className="grid grid-cols-4 gap-4">
+  294 |           {[1, 2, 3, 4].map((i) => (<Skeleton key={i} className="h-24 rounded-xl" />))}
+  295 |         </div>
+  296 |       </div>
+  297 |     );
+  298 |   }
+  299 | 
+  300 |   if (error) {
+  301 |     return (
+  302 |       <div className="p-6 max-w-5xl mx-auto">
+  303 |         <Card className="border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950">
+  304 |           <CardContent className="py-6 text-center text-red-700 dark:text-red-400">
+  305 |             <AlertTriangle className="mx-auto mb-2" size={24} />
+  306 |             <p>{error}</p>
+  307 |           </CardContent>
+  308 |         </Card>
+  309 |       </div>
+  310 |     );
+  311 |   }
+  312 | 
+  313 |   return (
+  314 |     <ScrollArea className="h-full">
+  315 |       <div className="p-6 max-w-5xl mx-auto space-y-6">
+  316 |         <div>
+  317 |           <h1 className="text-2xl font-bold text-foreground">仪表盘</h1>
+  318 |           <p className="text-sm text-muted-foreground mt-1">项目管理概览</p>
+  319 |         </div>
+  320 | 
+  321 |         {/* Stats Cards */}
+  322 |         <div className="grid grid-cols-4 gap-4">
+  323 |           <Card>
+  324 |             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+  325 |               <CardTitle className="text-sm font-medium text-muted-foreground">总任务</CardTitle>
+  326 |               <FolderKanban size={16} className="text-indigo-500" />
+  327 |             </CardHeader>
+  328 |             <CardContent>
+  329 |               <p className="text-2xl font-bold">{allTasks.length}</p>
+  330 |             </CardContent>
+  331 |           </Card>
+  332 |           <Card>
+  333 |             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+  334 |               <CardTitle className="text-sm font-medium text-muted-foreground">待办</CardTitle>
+  335 |               <div className="w-2.5 h-2.5 rounded-full bg-slate-400" />
+  336 |             </CardHeader>
+  337 |             <CardContent>
+  338 |               <p className="text-2xl font-bold">{todoTasks.length}</p>
+  339 |             </CardContent>
+  340 |           </Card>
+  341 |           <Card>
+  342 |             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+  343 |               <CardTitle className="text-sm font-medium text-muted-foreground">阻塞</CardTitle>
+  344 |               <AlertTriangle size={16} className="text-red-400" />
+  345 |             </CardHeader>
+  346 |             <CardContent>
+  347 |               <p className="text-2xl font-bold">{blockedTasks.length}</p>
+  348 |             </CardContent>
+  349 |           </Card>
+  350 |           <Card>
+  351 |             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+  352 |               <CardTitle className="text-sm font-medium text-muted-foreground">完成率</CardTitle>
+  353 |               <CheckCircle2 size={16} className="text-green-500" />
+  354 |             </CardHeader>
+  355 |             <CardContent>
+  356 |               <p className="text-2xl font-bold">
+  357 |                 {allTasks.length > 0
+  358 |                   ? Math.round((doneTasks.length / allTasks.length) * 100) : 0}%
+  359 |               </p>
+  360 |             </CardContent>
+  361 |           </Card>
+  362 |         </div>
+  363 | 
+  364 |         {/* Charts + Lists */}
+  365 |         <div className="grid grid-cols-2 gap-6">
+  366 |           {/* Status Distribution Pie Chart */}
+  367 |           <Card>
+  368 |             <CardHeader>
+  369 |               <CardTitle className="text-base">任务状态分布</CardTitle>
+  370 |             </CardHeader>
+  371 |             <CardContent>
+  372 |               {pieData.length === 0 ? (
+  373 |                 <p className="text-sm text-muted-foreground py-8 text-center">暂无数据</p>
+  374 |               ) : (
+  375 |                 <div className="h-[220px]">
+  376 |                   <ResponsiveContainer width="100%" height="100%">
+  377 |                     <PieChart>
+  378 |                       <Pie
+  379 |                         data={pieData}
+  380 |                         cx="50%"
+  381 |                         cy="50%"
+  382 |                         innerRadius={50}
+  383 |                         outerRadius={80}
+  384 |                         dataKey="value"
+  385 |                         label={({ name, value }) => `${name} ${value}`}
+  386 |                         labelLine={false}
+  387 |                       >
+  388 |                         {pieData.map((entry, index) => (
+  389 |                           <Cell key={index} fill={entry.color} />
+  390 |                         ))}
+  391 |                       </Pie>
+  392 |                       <Tooltip />
+  393 |                     </PieChart>
+  394 |                   </ResponsiveContainer>
+  395 |                 </div>
+  396 |               )}
+  397 |             </CardContent>
+  398 |           </Card>
+  399 | 
+  400 |           {/* Active Projects */}
+  401 |           <Card>
+  402 |             <CardHeader>
+  403 |               <CardTitle className="text-base">活跃项目</CardTitle>
+  404 |             </CardHeader>
+  405 |             <CardContent>
+  406 |               {projects.length === 0 ? (
+  407 |                 <p className="text-sm text-muted-foreground py-8 text-center">
+  408 |                   暂无项目，点击左侧「新建项目」创建
+  409 |                 </p>
+  410 |               ) : (
+  411 |                 <div className="space-y-2">
+  412 |                   {projects.filter((p) => p.status === "active").map((p) => (
+  413 |                     <Link
+  414 |                       key={p.id}
+  415 |                       href={`/projects/${p.id}`}
+  416 |                       className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent transition-colors"
+  417 |                     >
+  418 |                       <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
+  419 |                       <span className="text-sm font-medium flex-1 truncate">{p.name}</span>
+  420 |                       <span className="text-xs text-muted-foreground">{p._count?.tasks || 0} 任务</span>
+  421 |                     </Link>
+  422 |                   ))}
+  423 |                 </div>
+  424 |               )}
+  425 |             </CardContent>
+  426 |           </Card>
+  427 |         </div>
+  428 | 
+  429 |         {/* Overdue & Blocked */}
+  430 |         <Card>
+  431 |           <CardHeader>
+  432 |             <CardTitle className="text-base">⚠️ 过期 & 阻塞任务</CardTitle>
+  433 |           </CardHeader>
+  434 |           <CardContent>
+  435 |             {blockedTasks.length === 0 && overdueOnly.length === 0 ? (
+  436 |               <p className="text-sm text-muted-foreground py-4 text-center">一切正常 🎉</p>
+  437 |             ) : (
+  438 |               <div className="space-y-2">
+  439 |                 {blockedTasks.slice(0, 3).map((task) => (
+  440 |                   <div key={task.id} className="flex items-center gap-2 p-2 rounded-lg bg-red-50 dark:bg-red-950 text-sm">
+  441 |                     <AlertTriangle size={14} className="text-red-400 shrink-0" />
+  442 |                     <span className="flex-1 truncate">{task.title}</span>
+  443 |                     <Badge variant="secondary" className="text-[10px] bg-red-100 text-red-700 dark:text-red-400">阻塞</Badge>
+  444 |                   </div>
+  445 |                 ))}
+  446 |                 {overdueOnly.slice(0, 3).map((task) => (
+  447 |                   <div key={task.id} className="flex items-center gap-2 p-2 rounded-lg bg-orange-50 dark:bg-orange-950 text-sm">
+  448 |                     <AlertTriangle size={14} className="text-orange-400 shrink-0" />
+  449 |                     <span className="flex-1 truncate">{task.title}</span>
+  450 |                     <Badge variant="secondary" className="text-[10px] bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-400">过期</Badge>
+  451 |                   </div>
+  452 |                 ))}
+  453 |               </div>
+  454 |             )}
+  455 |           </CardContent>
+  456 |         </Card>
+  457 |       </div>
+  458 |     </ScrollArea>
+  459 |   );
+  460 | }
+  461 | import { NextRequest, NextResponse } from "next/server";
+  462 | import { prisma } from "@/lib/prisma";
+  463 | 
+  464 | export async function GET(req: NextRequest) {
+  465 |   try {
+  466 |     const url = new URL(req.url, "http://localhost");
+  467 |     const projectId = url.searchParams.get("projectId");
+  468 |     const limit = parseInt(url.searchParams.get("limit") || "50");
+  469 | 
+  470 |     const where = projectId ? { projectId } : {};
+  471 |     const activities = await prisma.activityLog.findMany({
+  472 |       where,
+  473 |       orderBy: { createdAt: "desc" },
+  474 |       take: Math.min(limit, 200),
+  475 |     });
+  476 |     return NextResponse.json(activities);
+  477 |   } catch (err) {
+  478 |     console.error("GET /api/activities error:", err);
+  479 |     return NextResponse.json({ error: "获取活动日志失败" }, { status: 500 });
+  480 |   }
+  481 | }
+  482 | import { NextRequest, NextResponse } from "next/server";
+  483 | import { prisma } from "@/lib/prisma";
+  484 | 
+  485 | export async function POST(req: NextRequest) {
+  486 |   try {
+  487 |     const body = await req.json();
+  488 |     const projectId = body.projectId as string;
+  489 | 
+  490 |     if (!projectId) {
+  491 |       return NextResponse.json({ error: "projectId is required" }, { status: 400 });
+  492 |     }
+  493 | 
+  494 |     const project = await prisma.project.findUnique({
+  495 |       where: { id: projectId },
+  496 |       include: { tasks: { orderBy: { sortOrder: "asc" } } },
+  497 |     });
+  498 | 
+  499 |     if (!project) {
+  500 |       return NextResponse.json({ error: "Project not found" }, { status: 404 });
+  501 |     }
+  502 | 
+  503 |     // Build task context
+  504 |     const statusLabels: Record<string, string> = {
+  505 |       todo: "待办", in_progress: "进行中", blocked: "阻塞", done: "已完成",
+  506 |     };
+  507 |     const priorityLabels: Record<string, string> = {
+  508 |       low: "低", medium: "中", high: "高", urgent: "紧急",
+  509 |     };
+  510 | 
+  511 |     const grouped: Record<string, string[]> = {};
+  512 |     for (const t of project.tasks) {
+  513 |       const status = statusLabels[t.status] || t.status;
+  514 |       const priority = priorityLabels[t.priority] || t.priority;
+  515 |       let tags = "";
+  516 |       try { tags = JSON.parse(t.tags || "[]").join(", "); } catch { /* */ }
+  517 |       const due = t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 10) : "无";
+  518 |       const line = `- [${priority}] ${t.title} (${status}, 截止: ${due}${tags ? ", 标签: " + tags : ""})`;
+  519 |       (grouped[status] ||= []).push(line);
+  520 |     }
+  521 | 
+  522 |     let taskList = "";
+  523 |     for (const [status, tasks] of Object.entries(grouped)) {
+  524 |       taskList += `### ${status} (${tasks.length})\n${tasks.join("\n")}\n\n`;
+  525 |     }
+  526 | 
+  527 |     const prompt = `你是一个项目管理助手。请根据以下项目数据，生成一份简洁的周报（中文）。
+  528 | 
+  529 | 项目名称：${project.name}
+  530 | 总任务数：${project.tasks.length}
+  531 | 完成率：${project.tasks.length > 0 ? Math.round(project.tasks.filter(t => t.status === "done").length / project.tasks.length * 100) : 0}%
+  532 | 
+  533 | 任务详情：
+  534 | ${taskList}
+  535 | 
+  536 | 请生成包含以下内容的周报（Markdown格式）：
+  537 | 1. 本周概览（2-3句话总结）
+  538 | 2. 关键进展（已完成的重要事项）
+  539 | 3. 风险与阻塞（需要关注的问题）
+  540 | 4. 下周计划（建议优先处理的事项）
+  541 | 
+  542 | 保持简洁，不超过500字。`;
+  543 | 
+  544 |     const apiKey = process.env.DEEPSEEK_API_KEY;
+  545 |     if (!apiKey) {
+  546 |       return NextResponse.json({ error: "DeepSeek API key not configured" }, { status: 500 });
+  547 |     }
+  548 | 
+  549 |     const aiRes = await fetch("https://api.deepseek.com/v1/chat/completions", {
+  550 |       method: "POST",
+  551 |       headers: {
+  552 |         "Content-Type": "application/json",
+  553 |         Authorization: `Bearer ${apiKey}`,
+  554 |       },
+  555 |       body: JSON.stringify({
+  556 |         model: "deepseek-chat",
+  557 |         messages: [
+  558 |           { role: "system", content: "你是一个专业的项目管理助手，生成中文周报。" },
+  559 |           { role: "user", content: prompt },
+  560 |         ],
+  561 |         temperature: 0.7,
+  562 |         max_tokens: 1500,
+  563 |       }),
+  564 |     });
+  565 | 
+  566 |     if (!aiRes.ok) {
+  567 |       const errText = await aiRes.text();
+  568 |       console.error("DeepSeek API error:", errText);
+  569 |       return NextResponse.json({ error: "AI service error" }, { status: 502 });
+  570 |     }
+  571 | 
+  572 |     const aiData = await aiRes.json();
+  573 |     const report = aiData.choices?.[0]?.message?.content || "AI 未能生成报告";
+  574 | 
+  575 |     return NextResponse.json({ report });
+  576 |   } catch (err) {
+  577 |     console.error("AI report error:", err);
+  578 |     return NextResponse.json({ error: "Report generation failed" }, { status: 500 });
+  579 |   }
+  580 | }
+  581 | import { NextRequest, NextResponse } from "next/server";
+  582 | import { prisma } from "@/lib/prisma";
+  583 | 
+  584 | function escapeCsv(str: string): string {
+  585 |   // Prevent CSV injection: prefix cells starting with =, +, -, @
+  586 |   if (/^[=+\-@]/.test(str)) str = "'" + str;
+  587 |   if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+  588 |     return '"' + str.replace(/"/g, '""') + '"';
+  589 |   }
+  590 |   return str;
+  591 | }
+  592 | 
+  593 | export async function GET(req: NextRequest) {
+  594 |   try {
+  595 |     const url = new URL(req.url, "http://localhost");
+  596 |     const format = url.searchParams.get("format") || "csv";
+  597 |     const projectId = url.searchParams.get("projectId");
+  598 | 
+  599 |     if (!projectId) {
+  600 |       return NextResponse.json({ error: "projectId is required" }, { status: 400 });
+  601 |     }
+  602 | 
+  603 |     const project = await prisma.project.findUnique({
+  604 |       where: { id: projectId },
+  605 |       include: { tasks: { orderBy: { sortOrder: "asc" } } },
+  606 |     });
+  607 | 
+  608 |     if (!project) {
+  609 |       return NextResponse.json({ error: "project not found" }, { status: 404 });
+  610 |     }
+  611 | 
+  612 |     const statusLabels: Record<string, string> = {
+  613 |       todo: "todo", in_progress: "in_progress", blocked: "blocked", done: "done",
+  614 |     };
+  615 |     const priorityLabels: Record<string, string> = {
+  616 |       low: "low", medium: "medium", high: "high", urgent: "urgent",
+  617 |     };
+  618 | 
+  619 |     if (format === "markdown") {
+  620 |       let md = "# " + project.name + "\n\n";
+  621 |       md += "> Export: " + new Date().toISOString().slice(0, 10) + "\n";
+  622 |       md += "> Tasks: " + project.tasks.length + "\n\n";
+  623 | 
+  624 |       const grouped: Record<string, typeof project.tasks> = {};
+  625 |       for (const t of project.tasks) {
+  626 |         const arr = grouped[t.status] || [];
+  627 |         arr.push(t);
+  628 |         grouped[t.status] = arr;
+  629 |       }
+  630 | 
+  631 |       for (const status of ["todo", "in_progress", "blocked", "done"]) {
+  632 |         const ts = grouped[status] || [];
+  633 |         md += "## " + (statusLabels[status] || status) + " (" + ts.length + ")\n\n";
+  634 |         if (ts.length === 0) {
+  635 |           md += "*none*\n\n";
+  636 |           continue;
+  637 |         }
+  638 |         md += "| task | priority | tags | due |\n";
+  639 |         md += "|------|----------|------|-----|\n";
+  640 |         for (const t of ts) {
+  641 |           let tags = "";
+  642 |           try { tags = JSON.parse(t.tags || "[]").join(", "); } catch { /* */ }
+  643 |           md += "| " + t.title.replace(/\|/g, "\\|") + " | " + (priorityLabels[t.priority] || t.priority) + " | " + tags + " | " + (t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 10) : "-") + " |\n";
+  644 |         }
+  645 |         md += "\n";
+  646 |       }
+  647 | 
+  648 |       return new NextResponse(md, {
+  649 |         headers: {
+  650 |           "Content-Type": "text/markdown; charset=utf-8",
+  651 |           "Content-Disposition": "attachment; filename=\"" + encodeURIComponent(project.name) + ".md\"",
+  652 |         },
+  653 |       });
+  654 |     }
+  655 | 
+  656 |     // CSV
+  657 |     const headers = ["title", "status", "priority", "tags", "dueDate", "description"];
+  658 |     const rows = project.tasks.map((t) => {
+  659 |       let tags = "";
+  660 |       try { tags = JSON.parse(t.tags || "[]").join(";"); } catch { /* */ }
+  661 |       return [
+  662 |         escapeCsv(t.title),
+  663 |         statusLabels[t.status] || t.status,
+  664 |         priorityLabels[t.priority] || t.priority,
+  665 |         tags,
+  666 |         t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 10) : "",
+  667 |         escapeCsv(t.description || ""),
+  668 |       ];
+  669 |     });
+  670 | 
+  671 |     const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+  672 | 
+  673 |     return new NextResponse("\uFEFF" + csv, {
+  674 |       headers: {
+  675 |         "Content-Type": "text/csv; charset=utf-8",
+  676 |         "Content-Disposition": "attachment; filename=\"" + encodeURIComponent(project.name) + ".csv\"",
+  677 |       },
+  678 |     });
+  679 |   } catch (err) {
+  680 |     console.error("Export error:", err);
+  681 |     return NextResponse.json({ error: "Export failed" }, { status: 500 });
+  682 |   }
+  683 | }
+  684 | import { NextRequest, NextResponse } from "next/server";
+  685 | import { prisma } from "@/lib/prisma";
+  686 | import * as fs from "node:fs";
+  687 | import * as path from "node:path";
+  688 | 
+  689 | export async function POST(req: NextRequest) {
+  690 |   try {
+  691 |     const body = await req.json();
+  692 |     const projectId = body.projectId as string;
+  693 | 
+  694 |     if (!projectId) {
+  695 |       return NextResponse.json({ error: "projectId is required" }, { status: 400 });
+  696 |     }
+  697 | 
+  698 |     const project = await prisma.project.findUnique({
+  699 |       where: { id: projectId },
+  700 |       include: { tasks: { orderBy: { sortOrder: "asc" } } },
+  701 |     });
+  702 | 
+  703 |     if (!project) {
+  704 |       return NextResponse.json({ error: "Project not found" }, { status: 404 });
+  705 |     }
+  706 | 
+  707 |     // Obsidian vault path
+  708 |     const vaultPath = body.vaultPath || "D:/严能的个人知识库";
+  709 |     const pmDir = path.join(vaultPath, "05-项目管理", "01-看板");
+  710 | 
+  711 |     // Ensure directory exists
+  712 |     fs.mkdirSync(pmDir, { recursive: true });
+  713 | 
+  714 |     const statusLabels: Record<string, string> = {
+  715 |       todo: "待办", in_progress: "进行中", blocked: "阻塞", done: "已完成",
+  716 |     };
+  717 |     const priorityLabels: Record<string, string> = {
+  718 |       low: "低", medium: "中", high: "高", urgent: "紧急",
+  719 |     };
+  720 | 
+  721 |     // Build kanban-style Markdown
+  722 |     const now = new Date().toISOString().slice(0, 16).replace("T", " ");
+  723 |     let md = `---
+  724 | kanban-plugin: board
+  725 | domain: meta
+  726 | tags: [项目管理, 看板]
+  727 | project: "${project.name}"
+  728 | synced: "${now}"
+  729 | ---
+  730 | 
+  731 | # ${project.name} - 项目看板
+  732 | 
+  733 | > 同步时间: ${now} | 任务总数: ${project.tasks.length}
+  734 | 
+  735 | `;
+  736 | 
+  737 |     const grouped: Record<string, typeof project.tasks> = {};
+  738 |     for (const t of project.tasks) {
+  739 |       (grouped[t.status] ||= []).push(t);
+  740 |     }
+  741 | 
+  742 |     for (const status of ["todo", "in_progress", "blocked", "done"]) {
+  743 |       const tasks = grouped[status] || [];
+  744 |       md += `## ${statusLabels[status] || status}\n\n`;
+  745 |       if (tasks.length === 0) {
+  746 |         md += "\n";
+  747 |         continue;
+  748 |       }
+  749 |       for (const t of tasks) {
+  750 |         const pLabel = priorityLabels[t.priority] || t.priority;
+  751 |         let tags = "";
+  752 |         try { tags = JSON.parse(t.tags || "[]").join(" "); } catch { /* */ }
+  753 |         const due = t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 10) : "";
+  754 |         const dueStr = due ? ` 📅 ${due}` : "";
+  755 |         md += `- [${t.status === "done" ? "x" : " "}] ${t.title} 🔴${pLabel}${dueStr}${tags ? " #" + tags.replace(/,/g, " #") : ""}\n`;
+  756 |       }
+  757 |       md += "\n";
+  758 |     }
+  759 | 
+  760 |     md += `\n%% kanban:settings
+  761 | \`\`\`
+  762 | {"kanban-plugin":"board"}
+  763 | \`\`\`
+  764 | %%\n`;
+  765 | 
+  766 |     // Write to Obsidian vault
+  767 |     const safeName = project.name.replace(/[<>:"/\\|?*]/g, "-");
+  768 |     const filePath = path.join(pmDir, `pm-${safeName}-看板.md`);
+  769 |     fs.writeFileSync(filePath, md, "utf-8");
+  770 | 
+  771 |     return NextResponse.json({
+  772 |       success: true,
+  773 |       path: filePath,
+  774 |       message: `已同步到 ${filePath}`,
+  775 |     });
+  776 |   } catch (err) {
+  777 |     console.error("Obsidian sync error:", err);
+  778 |     return NextResponse.json({ error: "Sync failed" }, { status: 500 });
+  779 |   }
+  780 | }
+  781 | import { NextRequest, NextResponse } from "next/server";
+  782 | import { prisma } from "@/lib/prisma";
+  783 | 
+  784 | export async function GET() {
+  785 |   try {
+  786 |     const projects = await prisma.project.findMany({
+  787 |       include: { _count: { select: { tasks: true } } },
+  788 |       orderBy: { sortOrder: "asc" },
+  789 |     });
+  790 |     return NextResponse.json(projects);
+  791 |   } catch (err) {
+  792 |     console.error("GET /api/projects error:", err);
+  793 |     return NextResponse.json({ error: "获取项目列表失败" }, { status: 500 });
+  794 |   }
+  795 | }
+  796 | 
+  797 | export async function POST(req: NextRequest) {
+  798 |   try {
+  799 |     const body = await req.json();
+  800 |     if (!body.name || typeof body.name !== "string" || !body.name.trim()) {
+  801 |       return NextResponse.json({ error: "项目名称不能为空" }, { status: 400 });
+  802 |     }
+  803 |     const project = await prisma.project.create({
+  804 |       data: {
+  805 |         name: body.name.trim().slice(0, 200),
+  806 |         description: (body.description || "").slice(0, 1000),
+  807 |         color: body.color || "#6366f1",
+  808 |       },
+  809 |     });
+  810 |     return NextResponse.json(project, { status: 201 });
+  811 |   } catch (err) {
+  812 |     console.error("POST /api/projects error:", err);
+  813 |     return NextResponse.json({ error: "创建项目失败" }, { status: 500 });
+  814 |   }
+  815 | }
+  816 | import { NextRequest, NextResponse } from "next/server";
+  817 | import { prisma } from "@/lib/prisma";
+  818 | 
+  819 | export async function PATCH(req: NextRequest) {
+  820 |   try {
+  821 |     const body = await req.json();
+  822 |     const { orderedIds } = body as { orderedIds: string[] };
+  823 | 
+  824 |     if (!Array.isArray(orderedIds)) {
+  825 |       return NextResponse.json({ error: "orderedIds is required" }, { status: 400 });
+  826 |     }
+  827 | 
+  828 |     await Promise.all(
+  829 |       orderedIds.map((id, idx) =>
+  830 |         prisma.project.update({
+  831 |           where: { id },
+  832 |           data: { sortOrder: idx },
+  833 |         })
+  834 |       )
+  835 |     );
+  836 | 
+  837 |     return NextResponse.json({ success: true });
+  838 |   } catch (err) {
+  839 |     console.error("PATCH /api/projects/reorder error:", err);
+  840 |     return NextResponse.json({ error: "重新排序失败" }, { status: 500 });
+  841 |   }
+  842 | }
+  843 | import { NextRequest, NextResponse } from "next/server";
+  844 | import { prisma } from "@/lib/prisma";
+  845 | 
+  846 | export async function GET(
+  847 |   req: NextRequest,
+  848 |   context: { params: Promise<{ id: string }> }
+  849 | ) {
+  850 |   try {
+  851 |     const { id } = await context.params;
+  852 |     const project = await prisma.project.findUnique({
+  853 |       where: { id },
+  854 |       include: {
+  855 |         tasks: { orderBy: { sortOrder: "asc" } },
+  856 |         _count: { select: { tasks: true } },
+  857 |       },
+  858 |     });
+  859 |     if (!project) {
+  860 |       return NextResponse.json({ error: "项目不存在" }, { status: 404 });
+  861 |     }
+  862 |     return NextResponse.json(project);
+  863 |   } catch (err) {
+  864 |     console.error("GET /api/projects/[id] error:", err);
+  865 |     return NextResponse.json({ error: "获取项目失败" }, { status: 500 });
+  866 |   }
+  867 | }
+  868 | 
+  869 | export async function PATCH(
+  870 |   req: NextRequest,
+  871 |   context: { params: Promise<{ id: string }> }
+  872 | ) {
+  873 |   try {
+  874 |     const { id } = await context.params;
+  875 |     const body = await req.json();
+  876 |     const project = await prisma.project.update({
+  877 |       where: { id },
+  878 |       data: {
+  879 |         ...(body.name !== undefined && { name: String(body.name).slice(0, 200) }),
+  880 |         ...(body.description !== undefined && { description: String(body.description || "").slice(0, 1000) }),
+  881 |         ...(body.color !== undefined && { color: body.color }),
+  882 |         ...(body.status !== undefined && { status: body.status }),
+  883 |         ...(body.sortOrder !== undefined && { sortOrder: body.sortOrder }),
+  884 |       },
+  885 |     });
+  886 |     return NextResponse.json(project);
+  887 |   } catch (err) {
+  888 |     console.error("PATCH /api/projects/[id] error:", err);
+  889 |     return NextResponse.json({ error: "更新项目失败" }, { status: 500 });
+  890 |   }
+  891 | }
+  892 | 
+  893 | export async function DELETE(
+  894 |   req: NextRequest,
+  895 |   context: { params: Promise<{ id: string }> }
+  896 | ) {
+  897 |   try {
+  898 |     const { id } = await context.params;
+  899 |     await prisma.project.delete({ where: { id } });
+  900 |     return NextResponse.json({ success: true });
+  901 |   } catch (err) {
+  902 |     console.error("DELETE /api/projects/[id] error:", err);
+  903 |     return NextResponse.json({ error: "删除项目失败" }, { status: 500 });
+  904 |   }
+  905 | }
+  906 | import { NextRequest, NextResponse } from "next/server";
+  907 | import { prisma } from "@/lib/prisma";
+  908 | 
+  909 | export async function GET(req: NextRequest) {
+  910 |   try {
+  911 |     const url = new URL(req.url, "http://localhost");
+  912 |     const projectId = url.searchParams.get("projectId");
+  913 |     const where = projectId ? { projectId } : {};
+  914 |     const tasks = await prisma.task.findMany({
+  915 |       where,
+  916 |       orderBy: { sortOrder: "asc" },
+  917 |     });
+  918 |     return NextResponse.json(tasks);
+  919 |   } catch (err) {
+  920 |     console.error("GET /api/tasks error:", err);
+  921 |     return NextResponse.json({ error: "获取任务列表失败" }, { status: 500 });
+  922 |   }
+  923 | }
+  924 | 
+  925 | export async function POST(req: NextRequest) {
+  926 |   try {
+  927 |     const body = await req.json();
+  928 |     if (!body.title || typeof body.title !== "string" || !body.title.trim()) {
+  929 |       return NextResponse.json({ error: "任务标题不能为空" }, { status: 400 });
+  930 |     }
+  931 |     if (!body.projectId) {
+  932 |       return NextResponse.json({ error: "项目ID不能为空" }, { status: 400 });
+  933 |     }
+  934 | 
+  935 |     // Validate dueDate
+  936 |     let dueDate: Date | null = null;
+  937 |     if (body.dueDate) {
+  938 |       const parsed = new Date(body.dueDate);
+  939 |       if (!isNaN(parsed.getTime())) {
+  940 |         dueDate = parsed;
+  941 |       }
+  942 |     }
+  943 | 
+  944 |     const task = await prisma.task.create({
+  945 |       data: {
+  946 |         title: body.title.trim().slice(0, 500),
+  947 |         description: (body.description || "").slice(0, 5000),
+  948 |         status: body.status || "todo",
+  949 |         priority: body.priority || "medium",
+  950 |         projectId: body.projectId,
+  951 |         dueDate,
+  952 |         tags: JSON.stringify(body.tags || []),
+  953 |         sortOrder: body.sortOrder ?? 0,
+  954 |       },
+  955 |     });
+  956 |     // Log activity
+  957 |     try {
+  958 |       await prisma.activityLog.create({
+  959 |         data: {
+  960 |           action: "created",
+  961 |           entityType: "task",
+  962 |           entityId: task.id,
+  963 |           entityName: task.title,
+  964 |           detail: `创建任务: ${task.title}`,
+  965 |           projectId: task.projectId,
+  966 |           taskId: task.id,
+  967 |         },
+  968 |       });
+  969 |     } catch {}
+  970 | 
+  971 |     return NextResponse.json(task, { status: 201 });
+  972 |   } catch (err) {
+  973 |     console.error("POST /api/tasks error:", err);
+  974 |     return NextResponse.json({ error: "创建任务失败" }, { status: 500 });
+  975 |   }
+  976 | }
+  977 | import { NextRequest, NextResponse } from "next/server";
+  978 | import { prisma } from "@/lib/prisma";
+  979 | 
+  980 | export async function PATCH(
+  981 |   req: NextRequest,
+  982 |   context: { params: Promise<{ id: string }> }
+  983 | ) {
+  984 |   try {
+  985 |     const { id } = await context.params;
+  986 |     const body = await req.json();
+  987 | 
+  988 |     const data: Record<string, unknown> = {};
+  989 |     if (body.title !== undefined) data.title = String(body.title).slice(0, 500);
+  990 |     if (body.description !== undefined) data.description = String(body.description || "").slice(0, 5000);
+  991 |     if (body.status !== undefined) data.status = body.status;
+  992 |     if (body.priority !== undefined) data.priority = body.priority;
+  993 |     if (body.sortOrder !== undefined) data.sortOrder = body.sortOrder;
+  994 |     if (body.projectId !== undefined) data.projectId = body.projectId;
+  995 |     if (body.dueDate !== undefined) {
+  996 |       if (body.dueDate === null) {
+  997 |         data.dueDate = null;
+  998 |       } else {
+  999 |         const parsed = new Date(body.dueDate);
+ 1000 |         if (!isNaN(parsed.getTime())) data.dueDate = parsed;
+ 1001 |       }
+ 1002 |     }
+ 1003 |     if (body.tags !== undefined) data.tags = JSON.stringify(body.tags);
+ 1004 | 
+ 1005 |     const task = await prisma.task.update({ where: { id }, data });
+ 1006 | 
+ 1007 |     // Log activity for status changes
+ 1008 |     if (body.status || body.title) {
+ 1009 |       try {
+ 1010 |         const detailParts: string[] = [];
+ 1011 |         if (body.status) detailParts.push(`状态 → ${body.status}`);
+ 1012 |         if (body.title) detailParts.push("标题已更新");
+ 1013 |         await prisma.activityLog.create({
+ 1014 |           data: {
+ 1015 |             action: body.status ? "moved" : "updated",
+ 1016 |             entityType: "task",
+ 1017 |             entityId: task.id,
+ 1018 |             entityName: body.title || task.title,
+ 1019 |             detail: detailParts.join("; ") || "任务已更新",
+ 1020 |             projectId: task.projectId,
+ 1021 |             taskId: task.id,
+ 1022 |           },
+ 1023 |         });
+ 1024 |       } catch {}
+ 1025 |     }
+ 1026 | 
+ 1027 |     return NextResponse.json(task);
+ 1028 |   } catch (err) {
+ 1029 |     console.error("PATCH /api/tasks/[id] error:", err);
+ 1030 |     return NextResponse.json({ error: "更新任务失败" }, { status: 500 });
+ 1031 |   }
+ 1032 | }
+ 1033 | 
+ 1034 | export async function DELETE(
+ 1035 |   req: NextRequest,
+ 1036 |   context: { params: Promise<{ id: string }> }
+ 1037 | ) {
+ 1038 |   try {
+ 1039 |     const { id } = await context.params;
+ 1040 |     // Get task info before deleting for log
+ 1041 |     const task = await prisma.task.findUnique({ where: { id } });
+ 1042 |     await prisma.task.delete({ where: { id } });
+ 1043 | 
+ 1044 |     if (task) {
+ 1045 |       try {
+ 1046 |         await prisma.activityLog.create({
+ 1047 |           data: {
+ 1048 |             action: "deleted",
+ 1049 |             entityType: "task",
+ 1050 |             entityId: id,
+ 1051 |             entityName: task.title,
+ 1052 |             detail: `删除任务: ${task.title}`,
+ 1053 |             projectId: task.projectId,
+ 1054 |           },
+ 1055 |         });
+ 1056 |       } catch {}
+ 1057 |     }
+ 1058 | 
+ 1059 |     return NextResponse.json({ success: true });
+ 1060 |   } catch (err) {
+ 1061 |     console.error("DELETE /api/tasks/[id] error:", err);
+ 1062 |     return NextResponse.json({ error: "删除任务失败" }, { status: 500 });
+ 1063 |   }
+ 1064 | }
+ 1065 | "use client";
+ 1066 | 
+ 1067 | import { useState, useEffect, useCallback, useRef } from "react";
+ 1068 | import { useParams, useRouter } from "next/navigation";
+ 1069 | import { ArrowLeft, Plus, Search, X, Columns, Clock, BarChart3, Download, Filter, Sparkles, FolderSync } from "lucide-react";
+ 1070 | import { Button } from "@/components/ui/button";
+ 1071 | import { Input } from "@/components/ui/input";
+ 1072 | import { ScrollArea } from "@/components/ui/scroll-area";
+ 1073 | import { KanbanBoard } from "@/components/kanban-board";
+ 1074 | import { CreateTaskDialog } from "@/components/create-task-dialog";
+ 1075 | import { TaskDetailSheet } from "@/components/task-detail-sheet";
+ 1076 | import { GanttChart } from "@/components/gantt-chart";
+ 1077 | import { ActivityLog } from "@/components/activity-log";
+ 1078 | import type { Project, Task } from "@/types";
+ 1079 | 
+ 1080 | export default function ProjectPage() {
+ 1081 |   const params = useParams<{ id: string }>();
+ 1082 |   const router = useRouter();
+ 1083 |   const [project, setProject] = useState<Project | null>(null);
+ 1084 |   const [tasks, setTasks] = useState<Task[]>([]);
+ 1085 |   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+ 1086 |   const [newTaskStatus, setNewTaskStatus] = useState("todo");
+ 1087 | 
+ 1088 |   // Task detail sheet
+ 1089 |   const [searchQuery, setSearchQuery] = useState("");
+ 1090 |   const [view, setView] = useState<"kanban" | "gantt" | "log">("kanban");
+ 1091 |   const [tagFilter, setTagFilter] = useState<string>("");
+ 1092 |   const [aiReport, setAiReport] = useState<string | null>(null);
+ 1093 |   const [aiLoading, setAiLoading] = useState(false);
+ 1094 |   const [syncMsg, setSyncMsg] = useState<string | null>(null);
+ 1095 |   const [detailTask, setDetailTask] = useState<Task | null>(null);
+ 1096 |   const [detailOpen, setDetailOpen] = useState(false);
+ 1097 | 
+ 1098 |   const reorderAbortRef = useRef<AbortController | null>(null);
+ 1099 |   const tasksRef = useRef(tasks);
+ 1100 |   tasksRef.current = tasks;
+ 1101 | 
+ 1102 |   const fetchData = useCallback(async () => {
+ 1103 |     try {
+ 1104 |       const res = await fetch(`/api/projects/${params.id}`);
+ 1105 |       if (!res.ok) throw new Error("Not found");
+ 1106 |       const data = await res.json();
+ 1107 |       setProject(data);
+ 1108 |       setTasks(data.tasks || []);
+ 1109 |     } catch {
+ 1110 |       router.push("/");
+ 1111 |     }
+ 1112 |   }, [params.id, router]);
+ 1113 | 
+ 1114 |   useEffect(() => { fetchData(); }, [fetchData]);
+ 1115 | 
+ 1116 |   async function handleStatusChange(taskId: string, newStatus: string) {
+ 1117 |     const prevTasks = tasksRef.current;
+ 1118 |     setTasks((prev) =>
+ 1119 |       prev.map((t) => {
+ 1120 |         if (t.id !== taskId) return t;
+ 1121 |         const maxOrder = prev
+ 1122 |           .filter((p) => p.status === newStatus && p.id !== taskId)
+ 1123 |           .reduce((max, p) => Math.max(max, p.sortOrder), -1);
+ 1124 |         return { ...t, status: newStatus as Task["status"], sortOrder: maxOrder + 1 };
+ 1125 |       })
+ 1126 |     );
+ 1127 |     try {
+ 1128 |       const newSortOrder =
+ 1129 |         prevTasks
+ 1130 |           .filter((t) => t.status === newStatus && t.id !== taskId)
+ 1131 |           .reduce((max, t) => Math.max(max, t.sortOrder), -1) + 1;
+ 1132 |       await fetch(`/api/tasks/${taskId}`, {
+ 1133 |         method: "PATCH",
+ 1134 |         headers: { "Content-Type": "application/json" },
+ 1135 |         body: JSON.stringify({ status: newStatus, sortOrder: newSortOrder }),
+ 1136 |       });
+ 1137 |     } catch (err) {
+ 1138 |       console.error("Status change failed:", err);
+ 1139 |       setTasks(prevTasks);
+ 1140 |     }
+ 1141 |   }
+ 1142 | 
+ 1143 |   async function handleReorder(_columnStatus: string, orderedTaskIds: string[]) {
+ 1144 |     const prevTasks = tasksRef.current;
+ 1145 |     reorderAbortRef.current?.abort();
+ 1146 |     const controller = new AbortController();
+ 1147 |     reorderAbortRef.current = controller;
+ 1148 |     setTasks((prev) =>
+ 1149 |       prev.map((t) => {
+ 1150 |         const idx = orderedTaskIds.indexOf(t.id);
+ 1151 |         return idx !== -1 ? { ...t, sortOrder: idx } : t;
+ 1152 |       })
+ 1153 |     );
+ 1154 |     try {
+ 1155 |       await Promise.all(
+ 1156 |         orderedTaskIds.map((taskId, idx) =>
+ 1157 |           fetch(`/api/tasks/${taskId}`, {
+ 1158 |             method: "PATCH",
+ 1159 |             headers: { "Content-Type": "application/json" },
+ 1160 |             body: JSON.stringify({ sortOrder: idx }),
+ 1161 |             signal: controller.signal,
+ 1162 |           })
+ 1163 |         )
+ 1164 |       );
+ 1165 |     } catch (err: unknown) {
+ 1166 |       if (err instanceof Error && err.name === "AbortError") return;
+ 1167 |       console.error("Reorder failed:", err);
+ 1168 |       setTasks(prevTasks);
+ 1169 |     }
+ 1170 |   }
+ 1171 | 
+ 1172 |   async function handleDelete(taskId: string) {
+ 1173 |     const prevTasks = tasksRef.current;
+ 1174 |     setTasks((prev) => prev.filter((t) => t.id !== taskId));
+ 1175 |     try {
+ 1176 |       await fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
+ 1177 |     } catch (err) {
+ 1178 |       console.error("Delete failed:", err);
+ 1179 |       setTasks(prevTasks);
+ 1180 |     }
+ 1181 |   }
+ 1182 | 
+ 1183 |   async function handleCreateTask(data: {
+ 1184 |     title: string;
+ 1185 |     description: string;
+ 1186 |     status: string;
+ 1187 |     priority: string;
+ 1188 |     tags: string[];
+ 1189 |     dueDate: string;
+ 1190 |   }) {
+ 1191 |     const currentTasks = tasksRef.current;
+ 1192 |     const maxOrder = currentTasks
+ 1193 |       .filter((t) => t.status === data.status)
+ 1194 |       .reduce((max, t) => Math.max(max, t.sortOrder), -1);
+ 1195 |     try {
+ 1196 |       const res = await fetch("/api/tasks", {
+ 1197 |         method: "POST",
+ 1198 |         headers: { "Content-Type": "application/json" },
+ 1199 |         body: JSON.stringify({ ...data, projectId: params.id, sortOrder: maxOrder + 1 }),
+ 1200 |       });
+ 1201 |       if (res.ok) {
+ 1202 |         const newTask = await res.json();
+ 1203 |         setTasks((prev) => [...prev, newTask]);
+ 1204 |       }
+ 1205 |     } catch (err) {
+ 1206 |       console.error("Create task failed:", err);
+ 1207 |     }
+ 1208 |   }
+ 1209 | 
+ 1210 |   async function handleTaskSave(id: string, data: Partial<Task>) {
+ 1211 |     const prevTasks = tasksRef.current;
+ 1212 |     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...data } : t)));
+ 1213 |     try {
+ 1214 |       await fetch(`/api/tasks/${id}`, {
+ 1215 |         method: "PATCH",
+ 1216 |         headers: { "Content-Type": "application/json" },
+ 1217 |         body: JSON.stringify(data),
+ 1218 |       });
+ 1219 |       setDetailOpen(false);
+ 1220 |     } catch (err) {
+ 1221 |       console.error("Task update failed:", err);
+ 1222 |       setTasks(prevTasks);
+ 1223 |     }
+ 1224 |   }
+ 1225 | 
+ 1226 |   function handleTaskClick(task: Task) {
+ 1227 |     setDetailTask(task);
+ 1228 |     setDetailOpen(true);
+ 1229 |   }
+ 1230 | 
+ 1231 |   async function handleTaskDeleteFromDetail(id: string) {
+ 1232 |     setDetailOpen(false);
+ 1233 |     await handleDelete(id);
+ 1234 |   }
+ 1235 | 
+ 1236 |   async function handleGenerateReport() {
+ 1237 |     setAiLoading(true);
+ 1238 |     setAiReport(null);
+ 1239 |     try {
+ 1240 |       const res = await fetch("/api/ai/report", {
+ 1241 |         method: "POST",
+ 1242 |         headers: { "Content-Type": "application/json" },
+ 1243 |         body: JSON.stringify({ projectId: params.id }),
+ 1244 |       });
+ 1245 |       const data = await res.json();
+ 1246 |       setAiReport(data.report || data.error || "生成失败");
+ 1247 |     } catch {
+ 1248 |       setAiReport("AI 服务请求失败");
+ 1249 |     } finally {
+ 1250 |       setAiLoading(false);
+ 1251 |     }
+ 1252 |   }
+ 1253 | 
+ 1254 |   async function handleObsidianSync() {
+ 1255 |     setSyncMsg("同步中...");
+ 1256 |     try {
+ 1257 |       const res = await fetch("/api/obsidian/sync", {
+ 1258 |         method: "POST",
+ 1259 |         headers: { "Content-Type": "application/json" },
+ 1260 |         body: JSON.stringify({ projectId: params.id }),
+ 1261 |       });
+ 1262 |       const data = await res.json();
+ 1263 |       setSyncMsg(data.message || data.error || "同步完成");
+ 1264 |     } catch {
+ 1265 |       setSyncMsg("同步失败");
+ 1266 |     }
+ 1267 |   }
+ 1268 | 
+ 1269 |   function openCreateDialog(status: string) {
+ 1270 |     setNewTaskStatus(status);
+ 1271 |     setTaskDialogOpen(true);
+ 1272 |   }
+ 1273 | 
+ 1274 |   const filteredTasks = (() => {
+ 1275 |     let result = tasks;
+ 1276 |     if (searchQuery.trim()) {
+ 1277 |       const q = searchQuery.toLowerCase();
+ 1278 |       result = result.filter(
+ 1279 |         (t) =>
+ 1280 |           t.title.toLowerCase().includes(q) ||
+ 1281 |           (t.description || "").toLowerCase().includes(q)
+ 1282 |       );
+ 1283 |     }
+ 1284 |     if (tagFilter.trim()) {
+ 1285 |       const tag = tagFilter.toLowerCase();
+ 1286 |       result = result.filter((t) => {
+ 1287 |         try {
+ 1288 |           const tags: string[] = JSON.parse(t.tags || "[]");
+ 1289 |           return tags.some((tg) => tg.toLowerCase().includes(tag));
+ 1290 |         } catch {
+ 1291 |           return false;
+ 1292 |         }
+ 1293 |       });
+ 1294 |     }
+ 1295 |     return result;
+ 1296 |   })();
+ 1297 | 
+ 1298 |   if (!project) {
+ 1299 |     return (
+ 1300 |       <div className="p-6">
+ 1301 |         <p className="text-muted-foreground">加载中...</p>
+ 1302 |       </div>
+ 1303 |     );
+ 1304 |   }
+ 1305 | 
+ 1306 |   return (
+ 1307 |     <div className="h-full flex flex-col">
+ 1308 |       <div className="flex items-center justify-between p-4 border-b bg-background">
+ 1309 |         <div className="flex items-center gap-3">
+ 1310 |           <Button variant="ghost" size="icon" onClick={() => router.push("/")}>
+ 1311 |             <ArrowLeft size={18} />
+ 1312 |           </Button>
+ 1313 |           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: project.color }} />
+ 1314 |           <h1 className="text-lg font-bold text-foreground">{project.name}</h1>
+ 1315 |         </div>
+ 1316 |         <div className="flex items-center gap-2">
+ 1317 |           <Button size="sm" onClick={() => openCreateDialog("todo")} className="gap-1">
+ 1318 |             <Plus size={14} />
+ 1319 |             新建任务
+ 1320 |           </Button>
+ 1321 |           <div className="flex items-center gap-1.5 rounded-lg border border-input bg-background px-2.5 h-8 w-48 lg:w-56 has-[:focus]:border-ring has-[:focus]:ring-3 has-[:focus]:ring-ring/50">
+ 1322 |             <Search size={14} className="text-muted-foreground shrink-0" />
+ 1323 |             <input
+ 1324 |               value={searchQuery}
+ 1325 |               onChange={(e) => setSearchQuery(e.target.value)}
+ 1326 |               placeholder="搜索任务..."
+ 1327 |               className="flex-1 min-w-0 bg-transparent border-0 outline-none text-sm placeholder:text-muted-foreground"
+ 1328 |             />
+ 1329 |             {searchQuery && (
+ 1330 |               <button
+ 1331 |                 onClick={() => setSearchQuery("")}
+ 1332 |                 className="text-muted-foreground hover:text-foreground shrink-0"
+ 1333 |               >
+ 1334 |                 <X size={14} />
+ 1335 |               </button>
+ 1336 |             )}
+ 1337 |           </div>
+ 1338 |         </div>
+ 1339 |       </div>
+ 1340 |       {/* Toolbar row */}
+ 1341 |       <div className="flex items-center gap-1 px-4 py-1.5 border-b bg-muted/20">
+ 1342 |         <span className="text-[11px] text-muted-foreground mr-2">导出:</span>
+ 1343 |         <a
+ 1344 |           href={`/api/export?projectId=${params.id}&format=csv`}
+ 1345 |           className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+ 1346 |           download
+ 1347 |         >
+ 1348 |           CSV
+ 1349 |         </a>
+ 1350 |         <span className="text-muted-foreground/30 mx-1">|</span>
+ 1351 |         <a
+ 1352 |           href={`/api/export?projectId=${params.id}&format=markdown`}
+ 1353 |           className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+ 1354 |           download
+ 1355 |         >
+ 1356 |           Markdown
+ 1357 |         </a>
+ 1358 |         <span className="w-px h-3 bg-border mx-2" />
+ 1359 |         <button
+ 1360 |           onClick={handleObsidianSync}
+ 1361 |           className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+ 1362 |         >
+ 1363 |           <FolderSync size={12} />
+ 1364 |           {syncMsg ? syncMsg : "同步到 Obsidian"}
+ 1365 |         </button>
+ 1366 |         <span className="w-px h-3 bg-border mx-2" />
+ 1367 |         <button
+ 1368 |           onClick={handleGenerateReport}
+ 1369 |           disabled={aiLoading}
+ 1370 |           className="flex items-center gap-1 text-[11px] text-indigo-500 hover:text-indigo-600 transition-colors"
+ 1371 |         >
+ 1372 |           <Sparkles size={12} />
+ 1373 |           {aiLoading ? "生成中..." : "AI 周报"}
+ 1374 |         </button>
+ 1375 |       </div>
+ 1376 | 
+ 1377 |       {/* View switcher tabs */}
+ 1378 |       <div className="flex items-center gap-1 px-4 py-2 border-b bg-muted/30">
+ 1379 |         <button
+ 1380 |           onClick={() => setView("kanban")}
+ 1381 |           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+ 1382 |             view === "kanban" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+ 1383 |           }`}
+ 1384 |         >
+ 1385 |           <Columns size={14} /> 看板
+ 1386 |         </button>
+ 1387 |         <button
+ 1388 |           onClick={() => setView("gantt")}
+ 1389 |           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+ 1390 |             view === "gantt" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+ 1391 |           }`}
+ 1392 |         >
+ 1393 |           <BarChart3 size={14} /> 甘特图
+ 1394 |         </button>
+ 1395 |         <button
+ 1396 |           onClick={() => setView("log")}
+ 1397 |           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+ 1398 |             view === "log" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+ 1399 |           }`}
+ 1400 |         >
+ 1401 |           <Clock size={14} /> 活动
+ 1402 |         </button>
+ 1403 |         <div className="flex-1" />
+ 1404 |         <div className="flex items-center gap-1.5">
+ 1405 |           <Filter size={12} className="text-muted-foreground" />
+ 1406 |           <input
+ 1407 |             value={tagFilter}
+ 1408 |             onChange={(e) => setTagFilter(e.target.value)}
+ 1409 |             placeholder="按标签筛选..."
+ 1410 |             className="w-28 text-xs bg-transparent border-0 border-b border-transparent focus:border-border outline-none placeholder:text-muted-foreground"
+ 1411 |           />
+ 1412 |           {tagFilter && (
+ 1413 |             <button onClick={() => setTagFilter("")} className="text-muted-foreground hover:text-foreground">
+ 1414 |               <X size={12} />
+ 1415 |             </button>
+ 1416 |           )}
+ 1417 |         </div>
+ 1418 |       </div>
+ 1419 | 
+ 1420 |       {aiReport && (
+ 1421 |         <div className="p-4 border-b bg-indigo-50/50 dark:bg-indigo-950/20">
+ 1422 |           <div className="flex items-center justify-between mb-2">
+ 1423 |             <h3 className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">AI 周报</h3>
+ 1424 |             <button onClick={() => setAiReport(null)} className="text-xs text-muted-foreground hover:text-foreground">
+ 1425 |               <X size={14} />
+ 1426 |             </button>
+ 1427 |           </div>
+ 1428 |           <div className="text-sm text-foreground/80 whitespace-pre-wrap leading-relaxed">
+ 1429 |             {aiReport}
+ 1430 |           </div>
+ 1431 |         </div>
+ 1432 |       )}
+ 1433 | 
+ 1434 |       <ScrollArea className="flex-1">
+ 1435 |         {view === "kanban" && (
+ 1436 |           <div className="p-4 h-full">
+ 1437 |             <KanbanBoard
+ 1438 |               tasks={filteredTasks}
+ 1439 |               onStatusChange={handleStatusChange}
+ 1440 |               onReorder={handleReorder}
+ 1441 |               onDelete={handleDelete}
+ 1442 |               onCreateTask={openCreateDialog}
+ 1443 |               onTaskClick={handleTaskClick}
+ 1444 |             />
+ 1445 |           </div>
+ 1446 |         )}
+ 1447 |         {view === "gantt" && (
+ 1448 |           <div className="p-4">
+ 1449 |             <GanttChart tasks={filteredTasks} />
+ 1450 |           </div>
+ 1451 |         )}
+ 1452 |         {view === "log" && (
+ 1453 |           <div className="p-4">
+ 1454 |             <ActivityLog projectId={params.id} />
+ 1455 |           </div>
+ 1456 |         )}
+ 1457 |       </ScrollArea>
+ 1458 | 
+ 1459 |       <TaskDetailSheet
+ 1460 |         task={detailTask}
+ 1461 |         open={detailOpen}
+ 1462 |         onOpenChange={setDetailOpen}
+ 1463 |         onSave={handleTaskSave}
+ 1464 |         onDelete={handleTaskDeleteFromDetail}
+ 1465 |       />
+ 1466 | 
+ 1467 |       <CreateTaskDialog
+ 1468 |         open={taskDialogOpen}
+ 1469 |         onOpenChange={setTaskDialogOpen}
+ 1470 |         defaultStatus={newTaskStatus}
+ 1471 |         projectId={params.id}
+ 1472 |         onCreate={handleCreateTask}
+ 1473 |       />
+ 1474 |     </div>
+ 1475 |   );
+ 1476 | }
+ 1477 | "use client";
+ 1478 | 
+ 1479 | import { useState, useEffect } from "react";
+ 1480 | import { ScrollArea } from "@/components/ui/scroll-area";
+ 1481 | import { Skeleton } from "@/components/ui/skeleton";
+ 1482 | import { format, formatDistanceToNow } from "date-fns";
+ 1483 | import { zhCN } from "date-fns/locale";
+ 1484 | import { Clock, Plus, Edit3, Trash2, ArrowRight } from "lucide-react";
+ 1485 | 
+ 1486 | interface Activity {
+ 1487 |   id: string;
+ 1488 |   action: string;
+ 1489 |   entityType: string;
+ 1490 |   entityName: string;
+ 1491 |   detail: string | null;
+ 1492 |   createdAt: string;
+ 1493 | }
+ 1494 | 
+ 1495 | const ACTION_ICONS: Record<string, React.ReactNode> = {
+ 1496 |   created: <Plus size={14} className="text-green-500" />,
+ 1497 |   updated: <Edit3 size={14} className="text-blue-500" />,
+ 1498 |   moved: <ArrowRight size={14} className="text-indigo-500" />,
+ 1499 |   deleted: <Trash2 size={14} className="text-red-500" />,
+ 1500 |   completed: <div className="w-3.5 h-3.5 rounded-full bg-green-500" />,
+
+
+============================================================
+【后30页 — 源代码后半部分】
+
+ 2657 |           <div className="flex flex-wrap items-center gap-1.5 mt-2">
+ 2658 |             <Badge variant="secondary" className={`text-[10px] px-1.5 py-0 ${priorityColor}`}>
+ 2659 |               {PRIORITY_LABELS[task.priority as keyof typeof PRIORITY_LABELS] ?? task.priority}
+ 2660 |             </Badge>
+ 2661 |             {tags.filter(Boolean).slice(0, 2).map((tag) => (
+ 2662 |               <Badge key={tag} variant="outline" className="text-[10px] px-1.5 py-0 text-muted-foreground">
+ 2663 |                 {tag}
+ 2664 |               </Badge>
+ 2665 |             ))}
+ 2666 |             {task.dueDate && (
+ 2667 |               <span className="text-[10px] text-gray-400 flex items-center gap-0.5 ml-auto">
+ 2668 |                 <Calendar size={10} />
+ 2669 |                 {format(new Date(task.dueDate), "MM/dd")}
+ 2670 |               </span>
+ 2671 |             )}
+ 2672 |           </div>
+ 2673 |         </div>
+ 2674 |         <button
+ 2675 |           onClick={(e) => {
+ 2676 |             e.stopPropagation();
+ 2677 |             if (confirm("确定要删除此任务吗？")) onDelete(task.id);
+ 2678 |           }}
+ 2679 |           className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-500 transition-opacity shrink-0"
+ 2680 |           aria-label="删除任务"
+ 2681 |         >
+ 2682 |           <Trash2 size={14} />
+ 2683 |         </button>
+ 2684 |       </div>
+ 2685 |     </Card>
+ 2686 |   );
+ 2687 | }
+ 2688 | "use client";
+ 2689 | 
+ 2690 | import { useState, useEffect } from "react";
+ 2691 | import {
+ 2692 |   Sheet,
+ 2693 |   SheetContent,
+ 2694 |   SheetHeader,
+ 2695 |   SheetTitle,
+ 2696 | } from "@/components/ui/sheet";
+ 2697 | import { Button } from "@/components/ui/button";
+ 2698 | import { Input } from "@/components/ui/input";
+ 2699 | import { Textarea } from "@/components/ui/textarea";
+ 2700 | import {
+ 2701 |   Select,
+ 2702 |   SelectContent,
+ 2703 |   SelectItem,
+ 2704 |   SelectTrigger,
+ 2705 |   SelectValue,
+ 2706 | } from "@/components/ui/select";
+ 2707 | import { Label } from "@/components/ui/label";
+ 2708 | import { Badge } from "@/components/ui/badge";
+ 2709 | import { Loader2, X } from "lucide-react";
+ 2710 | import type { Task } from "@/types";
+ 2711 | import { STATUS_LABELS, PRIORITY_LABELS } from "@/types";
+ 2712 | 
+ 2713 | interface TaskDetailSheetProps {
+ 2714 |   task: Task | null;
+ 2715 |   open: boolean;
+ 2716 |   onOpenChange: (open: boolean) => void;
+ 2717 |   onSave: (id: string, data: Partial<Task>) => void;
+ 2718 |   onDelete: (id: string) => void;
+ 2719 | }
+ 2720 | 
+ 2721 | export function TaskDetailSheet({
+ 2722 |   task,
+ 2723 |   open,
+ 2724 |   onOpenChange,
+ 2725 |   onSave,
+ 2726 |   onDelete,
+ 2727 | }: TaskDetailSheetProps) {
+ 2728 |   const [title, setTitle] = useState("");
+ 2729 |   const [description, setDescription] = useState("");
+ 2730 |   const [status, setStatus] = useState<Task["status"]>("todo");
+ 2731 |   const [priority, setPriority] = useState<Task["priority"]>("medium");
+ 2732 |   const [dueDate, setDueDate] = useState("");
+ 2733 |   const [tagInput, setTagInput] = useState("");
+ 2734 |   const [saving, setSaving] = useState(false);
+ 2735 | 
+ 2736 |   // Reset form when task changes
+ 2737 |   useEffect(() => {
+ 2738 |     if (task) {
+ 2739 |       setTitle(task.title);
+ 2740 |       setDescription(task.description || "");
+ 2741 |       setStatus(task.status);
+ 2742 |       setPriority(task.priority);
+ 2743 |       setDueDate(task.dueDate ? task.dueDate.slice(0, 10) : "");
+ 2744 |       try {
+ 2745 |         const tags = JSON.parse(task.tags || "[]") as string[];
+ 2746 |         setTagInput(tags.join(", "));
+ 2747 |       } catch {
+ 2748 |         setTagInput("");
+ 2749 |       }
+ 2750 |     }
+ 2751 |   }, [task]);
+ 2752 | 
+ 2753 |   if (!task) return null;
+ 2754 | 
+ 2755 |   const tags = tagInput
+ 2756 |     .split(/[,，]/)
+ 2757 |     .map((t) => t.trim())
+ 2758 |     .filter(Boolean);
+ 2759 | 
+ 2760 |   async function handleSave() {
+ 2761 |     if (!title.trim() || saving) return;
+ 2762 |     setSaving(true);
+ 2763 |     await onSave(task!.id, {
+ 2764 |       title: title.trim(),
+ 2765 |       description: description.trim(),
+ 2766 |       status,
+ 2767 |       priority,
+ 2768 |       dueDate: dueDate || null,
+ 2769 |       tags: tags as unknown as Task["tags"],
+ 2770 |     });
+ 2771 |     setSaving(false);
+ 2772 |   }
+ 2773 | 
+ 2774 |   return (
+ 2775 |     <Sheet open={open} onOpenChange={onOpenChange}>
+ 2776 |       <SheetContent side="right" className="w-[400px] sm:w-[480px] overflow-y-auto">
+ 2777 |         <SheetHeader>
+ 2778 |           <SheetTitle>编辑任务</SheetTitle>
+ 2779 |         </SheetHeader>
+ 2780 | 
+ 2781 |         <div className="space-y-4 mt-6">
+ 2782 |           {/* Title */}
+ 2783 |           <div className="space-y-1.5">
+ 2784 |             <Label>标题</Label>
+ 2785 |             <Input
+ 2786 |               value={title}
+ 2787 |               onChange={(e) => setTitle(e.target.value)}
+ 2788 |               maxLength={500}
+ 2789 |             />
+ 2790 |           </div>
+ 2791 | 
+ 2792 |           {/* Description */}
+ 2793 |           <div className="space-y-1.5">
+ 2794 |             <Label>描述</Label>
+ 2795 |             <Textarea
+ 2796 |               value={description}
+ 2797 |               onChange={(e) => setDescription(e.target.value)}
+ 2798 |               rows={4}
+ 2799 |               maxLength={5000}
+ 2800 |             />
+ 2801 |           </div>
+ 2802 | 
+ 2803 |           {/* Status + Priority */}
+ 2804 |           <div className="grid grid-cols-2 gap-4">
+ 2805 |             <div className="space-y-1.5">
+ 2806 |               <Label>状态</Label>
+ 2807 |               <Select value={status} onValueChange={(v) => setStatus(v as Task["status"])}>
+ 2808 |                 <SelectTrigger>
+ 2809 |                   <SelectValue />
+ 2810 |                 </SelectTrigger>
+ 2811 |                 <SelectContent>
+ 2812 |                   {Object.entries(STATUS_LABELS).map(([k, v]) => (
+ 2813 |                     <SelectItem key={k} value={k}>{v}</SelectItem>
+ 2814 |                   ))}
+ 2815 |                 </SelectContent>
+ 2816 |               </Select>
+ 2817 |             </div>
+ 2818 |             <div className="space-y-1.5">
+ 2819 |               <Label>优先级</Label>
+ 2820 |               <Select value={priority} onValueChange={(v) => setPriority(v as Task["priority"])}>
+ 2821 |                 <SelectTrigger>
+ 2822 |                   <SelectValue />
+ 2823 |                 </SelectTrigger>
+ 2824 |                 <SelectContent>
+ 2825 |                   {Object.entries(PRIORITY_LABELS).map(([k, v]) => (
+ 2826 |                     <SelectItem key={k} value={k}>{v}</SelectItem>
+ 2827 |                   ))}
+ 2828 |                 </SelectContent>
+ 2829 |               </Select>
+ 2830 |             </div>
+ 2831 |           </div>
+ 2832 | 
+ 2833 |           {/* Due Date */}
+ 2834 |           <div className="space-y-1.5">
+ 2835 |             <Label>截止日期</Label>
+ 2836 |             <Input
+ 2837 |               type="date"
+ 2838 |               value={dueDate}
+ 2839 |               onChange={(e) => setDueDate(e.target.value)}
+ 2840 |             />
+ 2841 |           </div>
+ 2842 | 
+ 2843 |           {/* Tags */}
+ 2844 |           <div className="space-y-1.5">
+ 2845 |             <Label>标签</Label>
+ 2846 |             <Input
+ 2847 |               value={tagInput}
+ 2848 |               onChange={(e) => setTagInput(e.target.value)}
+ 2849 |               placeholder="逗号分隔，如: 前端, 紧急"
+ 2850 |             />
+ 2851 |             {tags.length > 0 && (
+ 2852 |               <div className="flex flex-wrap gap-1 mt-1">
+ 2853 |                 {tags.map((tag) => (
+ 2854 |                   <Badge key={tag} variant="secondary" className="text-xs">
+ 2855 |                     {tag}
+ 2856 |                   </Badge>
+ 2857 |                 ))}
+ 2858 |               </div>
+ 2859 |             )}
+ 2860 |           </div>
+ 2861 | 
+ 2862 |           {/* Action buttons */}
+ 2863 |           <div className="flex gap-2 pt-4 border-t">
+ 2864 |             <Button onClick={handleSave} disabled={saving} className="flex-1">
+ 2865 |               {saving ? <Loader2 size={14} className="animate-spin mr-1" /> : null}
+ 2866 |               保存
+ 2867 |             </Button>
+ 2868 |             <Button
+ 2869 |               variant="destructive"
+ 2870 |               onClick={() => { if (confirm("确定要删除此任务吗？")) onDelete(task.id); }}
+ 2871 |               className="shrink-0"
+ 2872 |             >
+ 2873 |               删除
+ 2874 |             </Button>
+ 2875 |           </div>
+ 2876 |         </div>
+ 2877 |       </SheetContent>
+ 2878 |     </Sheet>
+ 2879 |   );
+ 2880 | }
+ 2881 | "use client";
+ 2882 | 
+ 2883 | import { ThemeProvider as NextThemesProvider } from "next-themes";
+ 2884 | 
+ 2885 | export function ThemeProvider({
+ 2886 |   children,
+ 2887 |   ...props
+ 2888 | }: React.ComponentProps<typeof NextThemesProvider>) {
+ 2889 |   return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
+ 2890 | }
+ 2891 | import { mergeProps } from "@base-ui/react/merge-props"
+ 2892 | import { useRender } from "@base-ui/react/use-render"
+ 2893 | import { cva, type VariantProps } from "class-variance-authority"
+ 2894 | 
+ 2895 | import { cn } from "@/lib/utils"
+ 2896 | 
+ 2897 | const badgeVariants = cva(
+ 2898 |   "group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!",
+ 2899 |   {
+ 2900 |     variants: {
+ 2901 |       variant: {
+ 2902 |         default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
+ 2903 |         secondary:
+ 2904 |           "bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80",
+ 2905 |         destructive:
+ 2906 |           "bg-destructive/10 text-destructive focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 [a]:hover:bg-destructive/20",
+ 2907 |         outline:
+ 2908 |           "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
+ 2909 |         ghost:
+ 2910 |           "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
+ 2911 |         link: "text-primary underline-offset-4 hover:underline",
+ 2912 |       },
+ 2913 |     },
+ 2914 |     defaultVariants: {
+ 2915 |       variant: "default",
+ 2916 |     },
+ 2917 |   }
+ 2918 | )
+ 2919 | 
+ 2920 | function Badge({
+ 2921 |   className,
+ 2922 |   variant = "default",
+ 2923 |   render,
+ 2924 |   ...props
+ 2925 | }: useRender.ComponentProps<"span"> & VariantProps<typeof badgeVariants>) {
+ 2926 |   return useRender({
+ 2927 |     defaultTagName: "span",
+ 2928 |     props: mergeProps<"span">(
+ 2929 |       {
+ 2930 |         className: cn(badgeVariants({ variant }), className),
+ 2931 |       },
+ 2932 |       props
+ 2933 |     ),
+ 2934 |     render,
+ 2935 |     state: {
+ 2936 |       slot: "badge",
+ 2937 |       variant,
+ 2938 |     },
+ 2939 |   })
+ 2940 | }
+ 2941 | 
+ 2942 | export { Badge, badgeVariants }
+ 2943 | import { Button as ButtonPrimitive } from "@base-ui/react/button"
+ 2944 | import { cva, type VariantProps } from "class-variance-authority"
+ 2945 | 
+ 2946 | import { cn } from "@/lib/utils"
+ 2947 | 
+ 2948 | const buttonVariants = cva(
+ 2949 |   "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+ 2950 |   {
+ 2951 |     variants: {
+ 2952 |       variant: {
+ 2953 |         default: "bg-primary text-primary-foreground hover:bg-primary/80",
+ 2954 |         outline:
+ 2955 |           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+ 2956 |         secondary:
+ 2957 |           "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+ 2958 |         ghost:
+ 2959 |           "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+ 2960 |         destructive:
+ 2961 |           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
+ 2962 |         link: "text-primary underline-offset-4 hover:underline",
+ 2963 |       },
+ 2964 |       size: {
+ 2965 |         default:
+ 2966 |           "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+ 2967 |         xs: "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
+ 2968 |         sm: "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+ 2969 |         lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+ 2970 |         icon: "size-8",
+ 2971 |         "icon-xs":
+ 2972 |           "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
+ 2973 |         "icon-sm":
+ 2974 |           "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
+ 2975 |         "icon-lg": "size-9",
+ 2976 |       },
+ 2977 |     },
+ 2978 |     defaultVariants: {
+ 2979 |       variant: "default",
+ 2980 |       size: "default",
+ 2981 |     },
+ 2982 |   }
+ 2983 | )
+ 2984 | 
+ 2985 | function Button({
+ 2986 |   className,
+ 2987 |   variant = "default",
+ 2988 |   size = "default",
+ 2989 |   ...props
+ 2990 | }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+ 2991 |   return (
+ 2992 |     <ButtonPrimitive
+ 2993 |       data-slot="button"
+ 2994 |       className={cn(buttonVariants({ variant, size, className }))}
+ 2995 |       {...props}
+ 2996 |     />
+ 2997 |   )
+ 2998 | }
+ 2999 | 
+ 3000 | export { Button, buttonVariants }
+ 3001 | import * as React from "react"
+ 3002 | 
+ 3003 | import { cn } from "@/lib/utils"
+ 3004 | 
+ 3005 | function Card({
+ 3006 |   className,
+ 3007 |   size = "default",
+ 3008 |   ...props
+ 3009 | }: React.ComponentProps<"div"> & { size?: "default" | "sm" }) {
+ 3010 |   return (
+ 3011 |     <div
+ 3012 |       data-slot="card"
+ 3013 |       data-size={size}
+ 3014 |       className={cn(
+ 3015 |         "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+ 3016 |         className
+ 3017 |       )}
+ 3018 |       {...props}
+ 3019 |     />
+ 3020 |   )
+ 3021 | }
+ 3022 | 
+ 3023 | function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
+ 3024 |   return (
+ 3025 |     <div
+ 3026 |       data-slot="card-header"
+ 3027 |       className={cn(
+ 3028 |         "group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-t-xl px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing)",
+ 3029 |         className
+ 3030 |       )}
+ 3031 |       {...props}
+ 3032 |     />
+ 3033 |   )
+ 3034 | }
+ 3035 | 
+ 3036 | function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+ 3037 |   return (
+ 3038 |     <div
+ 3039 |       data-slot="card-title"
+ 3040 |       className={cn(
+ 3041 |         "font-heading text-base leading-snug font-medium group-data-[size=sm]/card:text-sm",
+ 3042 |         className
+ 3043 |       )}
+ 3044 |       {...props}
+ 3045 |     />
+ 3046 |   )
+ 3047 | }
+ 3048 | 
+ 3049 | function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
+ 3050 |   return (
+ 3051 |     <div
+ 3052 |       data-slot="card-description"
+ 3053 |       className={cn("text-sm text-muted-foreground", className)}
+ 3054 |       {...props}
+ 3055 |     />
+ 3056 |   )
+ 3057 | }
+ 3058 | 
+ 3059 | function CardAction({ className, ...props }: React.ComponentProps<"div">) {
+ 3060 |   return (
+ 3061 |     <div
+ 3062 |       data-slot="card-action"
+ 3063 |       className={cn(
+ 3064 |         "col-start-2 row-span-2 row-start-1 self-start justify-self-end",
+ 3065 |         className
+ 3066 |       )}
+ 3067 |       {...props}
+ 3068 |     />
+ 3069 |   )
+ 3070 | }
+ 3071 | 
+ 3072 | function CardContent({ className, ...props }: React.ComponentProps<"div">) {
+ 3073 |   return (
+ 3074 |     <div
+ 3075 |       data-slot="card-content"
+ 3076 |       className={cn("px-(--card-spacing)", className)}
+ 3077 |       {...props}
+ 3078 |     />
+ 3079 |   )
+ 3080 | }
+ 3081 | 
+ 3082 | function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
+ 3083 |   return (
+ 3084 |     <div
+ 3085 |       data-slot="card-footer"
+ 3086 |       className={cn(
+ 3087 |         "flex items-center rounded-b-xl border-t bg-muted/50 p-(--card-spacing)",
+ 3088 |         className
+ 3089 |       )}
+ 3090 |       {...props}
+ 3091 |     />
+ 3092 |   )
+ 3093 | }
+ 3094 | 
+ 3095 | export {
+ 3096 |   Card,
+ 3097 |   CardHeader,
+ 3098 |   CardFooter,
+ 3099 |   CardTitle,
+ 3100 |   CardAction,
+ 3101 |   CardDescription,
+ 3102 |   CardContent,
+ 3103 | }
+ 3104 | "use client"
+ 3105 | 
+ 3106 | import * as React from "react"
+ 3107 | import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
+ 3108 | 
+ 3109 | import { cn } from "@/lib/utils"
+ 3110 | import { Button } from "@/components/ui/button"
+ 3111 | import { XIcon } from "lucide-react"
+ 3112 | 
+ 3113 | function Dialog({ ...props }: DialogPrimitive.Root.Props) {
+ 3114 |   return <DialogPrimitive.Root data-slot="dialog" {...props} />
+ 3115 | }
+ 3116 | 
+ 3117 | function DialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {
+ 3118 |   return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
+ 3119 | }
+ 3120 | 
+ 3121 | function DialogPortal({ ...props }: DialogPrimitive.Portal.Props) {
+ 3122 |   return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
+ 3123 | }
+ 3124 | 
+ 3125 | function DialogClose({ ...props }: DialogPrimitive.Close.Props) {
+ 3126 |   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
+ 3127 | }
+ 3128 | 
+ 3129 | function DialogOverlay({
+ 3130 |   className,
+ 3131 |   ...props
+ 3132 | }: DialogPrimitive.Backdrop.Props) {
+ 3133 |   return (
+ 3134 |     <DialogPrimitive.Backdrop
+ 3135 |       data-slot="dialog-overlay"
+ 3136 |       className={cn(
+ 3137 |         "fixed inset-0 isolate z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+ 3138 |         className
+ 3139 |       )}
+ 3140 |       {...props}
+ 3141 |     />
+ 3142 |   )
+ 3143 | }
+ 3144 | 
+ 3145 | function DialogContent({
+ 3146 |   className,
+ 3147 |   children,
+ 3148 |   showCloseButton = true,
+ 3149 |   ...props
+ 3150 | }: DialogPrimitive.Popup.Props & {
+ 3151 |   showCloseButton?: boolean
+ 3152 | }) {
+ 3153 |   return (
+ 3154 |     <DialogPortal>
+ 3155 |       <DialogOverlay />
+ 3156 |       <DialogPrimitive.Popup
+ 3157 |         data-slot="dialog-content"
+ 3158 |         className={cn(
+ 3159 |           "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+ 3160 |           className
+ 3161 |         )}
+ 3162 |         {...props}
+ 3163 |       >
+ 3164 |         {children}
+ 3165 |         {showCloseButton && (
+ 3166 |           <DialogPrimitive.Close
+ 3167 |             data-slot="dialog-close"
+ 3168 |             render={
+ 3169 |               <Button
+ 3170 |                 variant="ghost"
+ 3171 |                 className="absolute top-2 right-2"
+ 3172 |                 size="icon-sm"
+ 3173 |               />
+ 3174 |             }
+ 3175 |           >
+ 3176 |             <XIcon
+ 3177 |             />
+ 3178 |             <span className="sr-only">Close</span>
+ 3179 |           </DialogPrimitive.Close>
+ 3180 |         )}
+ 3181 |       </DialogPrimitive.Popup>
+ 3182 |     </DialogPortal>
+ 3183 |   )
+ 3184 | }
+ 3185 | 
+ 3186 | function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
+ 3187 |   return (
+ 3188 |     <div
+ 3189 |       data-slot="dialog-header"
+ 3190 |       className={cn("flex flex-col gap-2", className)}
+ 3191 |       {...props}
+ 3192 |     />
+ 3193 |   )
+ 3194 | }
+ 3195 | 
+ 3196 | function DialogFooter({
+ 3197 |   className,
+ 3198 |   showCloseButton = false,
+ 3199 |   children,
+ 3200 |   ...props
+ 3201 | }: React.ComponentProps<"div"> & {
+ 3202 |   showCloseButton?: boolean
+ 3203 | }) {
+ 3204 |   return (
+ 3205 |     <div
+ 3206 |       data-slot="dialog-footer"
+ 3207 |       className={cn(
+ 3208 |         "-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted/50 p-4 sm:flex-row sm:justify-end",
+ 3209 |         className
+ 3210 |       )}
+ 3211 |       {...props}
+ 3212 |     >
+ 3213 |       {children}
+ 3214 |       {showCloseButton && (
+ 3215 |         <DialogPrimitive.Close render={<Button variant="outline" />}>
+ 3216 |           Close
+ 3217 |         </DialogPrimitive.Close>
+ 3218 |       )}
+ 3219 |     </div>
+ 3220 |   )
+ 3221 | }
+ 3222 | 
+ 3223 | function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
+ 3224 |   return (
+ 3225 |     <DialogPrimitive.Title
+ 3226 |       data-slot="dialog-title"
+ 3227 |       className={cn(
+ 3228 |         "font-heading text-base leading-none font-medium",
+ 3229 |         className
+ 3230 |       )}
+ 3231 |       {...props}
+ 3232 |     />
+ 3233 |   )
+ 3234 | }
+ 3235 | 
+ 3236 | function DialogDescription({
+ 3237 |   className,
+ 3238 |   ...props
+ 3239 | }: DialogPrimitive.Description.Props) {
+ 3240 |   return (
+ 3241 |     <DialogPrimitive.Description
+ 3242 |       data-slot="dialog-description"
+ 3243 |       className={cn(
+ 3244 |         "text-sm text-muted-foreground *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
+ 3245 |         className
+ 3246 |       )}
+ 3247 |       {...props}
+ 3248 |     />
+ 3249 |   )
+ 3250 | }
+ 3251 | 
+ 3252 | export {
+ 3253 |   Dialog,
+ 3254 |   DialogClose,
+ 3255 |   DialogContent,
+ 3256 |   DialogDescription,
+ 3257 |   DialogFooter,
+ 3258 |   DialogHeader,
+ 3259 |   DialogOverlay,
+ 3260 |   DialogPortal,
+ 3261 |   DialogTitle,
+ 3262 |   DialogTrigger,
+ 3263 | }
+ 3264 | "use client"
+ 3265 | 
+ 3266 | import * as React from "react"
+ 3267 | import { Menu as MenuPrimitive } from "@base-ui/react/menu"
+ 3268 | 
+ 3269 | import { cn } from "@/lib/utils"
+ 3270 | import { ChevronRightIcon, CheckIcon } from "lucide-react"
+ 3271 | 
+ 3272 | function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
+ 3273 |   return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />
+ 3274 | }
+ 3275 | 
+ 3276 | function DropdownMenuPortal({ ...props }: MenuPrimitive.Portal.Props) {
+ 3277 |   return <MenuPrimitive.Portal data-slot="dropdown-menu-portal" {...props} />
+ 3278 | }
+ 3279 | 
+ 3280 | function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
+ 3281 |   return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />
+ 3282 | }
+ 3283 | 
+ 3284 | function DropdownMenuContent({
+ 3285 |   align = "start",
+ 3286 |   alignOffset = 0,
+ 3287 |   side = "bottom",
+ 3288 |   sideOffset = 4,
+ 3289 |   className,
+ 3290 |   ...props
+ 3291 | }: MenuPrimitive.Popup.Props &
+ 3292 |   Pick<
+ 3293 |     MenuPrimitive.Positioner.Props,
+ 3294 |     "align" | "alignOffset" | "side" | "sideOffset"
+ 3295 |   >) {
+ 3296 |   return (
+ 3297 |     <MenuPrimitive.Portal>
+ 3298 |       <MenuPrimitive.Positioner
+ 3299 |         className="isolate z-50 outline-none"
+ 3300 |         align={align}
+ 3301 |         alignOffset={alignOffset}
+ 3302 |         side={side}
+ 3303 |         sideOffset={sideOffset}
+ 3304 |       >
+ 3305 |         <MenuPrimitive.Popup
+ 3306 |           data-slot="dropdown-menu-content"
+ 3307 |           className={cn("z-50 max-h-(--available-height) w-(--anchor-width) min-w-32 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 outline-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:overflow-hidden data-closed:fade-out-0 data-closed:zoom-out-95", className )}
+ 3308 |           {...props}
+ 3309 |         />
+ 3310 |       </MenuPrimitive.Positioner>
+ 3311 |     </MenuPrimitive.Portal>
+ 3312 |   )
+ 3313 | }
+ 3314 | 
+ 3315 | function DropdownMenuGroup({ ...props }: MenuPrimitive.Group.Props) {
+ 3316 |   return <MenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />
+ 3317 | }
+ 3318 | 
+ 3319 | function DropdownMenuLabel({
+ 3320 |   className,
+ 3321 |   inset,
+ 3322 |   ...props
+ 3323 | }: MenuPrimitive.GroupLabel.Props & {
+ 3324 |   inset?: boolean
+ 3325 | }) {
+ 3326 |   return (
+ 3327 |     <MenuPrimitive.GroupLabel
+ 3328 |       data-slot="dropdown-menu-label"
+ 3329 |       data-inset={inset}
+ 3330 |       className={cn(
+ 3331 |         "px-1.5 py-1 text-xs font-medium text-muted-foreground data-inset:pl-7",
+ 3332 |         className
+ 3333 |       )}
+ 3334 |       {...props}
+ 3335 |     />
+ 3336 |   )
+ 3337 | }
+ 3338 | 
+ 3339 | function DropdownMenuItem({
+ 3340 |   className,
+ 3341 |   inset,
+ 3342 |   variant = "default",
+ 3343 |   ...props
+ 3344 | }: MenuPrimitive.Item.Props & {
+ 3345 |   inset?: boolean
+ 3346 |   variant?: "default" | "destructive"
+ 3347 | }) {
+ 3348 |   return (
+ 3349 |     <MenuPrimitive.Item
+ 3350 |       data-slot="dropdown-menu-item"
+ 3351 |       data-inset={inset}
+ 3352 |       data-variant={variant}
+ 3353 |       className={cn(
+ 3354 |         "group/dropdown-menu-item relative flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-inset:pl-7 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-[variant=destructive]:*:[svg]:text-destructive",
+ 3355 |         className
+ 3356 |       )}
+ 3357 |       {...props}
+ 3358 |     />
+ 3359 |   )
+ 3360 | }
+ 3361 | 
+ 3362 | function DropdownMenuSub({ ...props }: MenuPrimitive.SubmenuRoot.Props) {
+ 3363 |   return <MenuPrimitive.SubmenuRoot data-slot="dropdown-menu-sub" {...props} />
+ 3364 | }
+ 3365 | 
+ 3366 | function DropdownMenuSubTrigger({
+ 3367 |   className,
+ 3368 |   inset,
+ 3369 |   children,
+ 3370 |   ...props
+ 3371 | }: MenuPrimitive.SubmenuTrigger.Props & {
+ 3372 |   inset?: boolean
+ 3373 | }) {
+ 3374 |   return (
+ 3375 |     <MenuPrimitive.SubmenuTrigger
+ 3376 |       data-slot="dropdown-menu-sub-trigger"
+ 3377 |       data-inset={inset}
+ 3378 |       className={cn(
+ 3379 |         "flex cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-inset:pl-7 data-popup-open:bg-accent data-popup-open:text-accent-foreground data-open:bg-accent data-open:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+ 3380 |         className
+ 3381 |       )}
+ 3382 |       {...props}
+ 3383 |     >
+ 3384 |       {children}
+ 3385 |       <ChevronRightIcon className="ml-auto" />
+ 3386 |     </MenuPrimitive.SubmenuTrigger>
+ 3387 |   )
+ 3388 | }
+ 3389 | 
+ 3390 | function DropdownMenuSubContent({
+ 3391 |   align = "start",
+ 3392 |   alignOffset = -3,
+ 3393 |   side = "right",
+ 3394 |   sideOffset = 0,
+ 3395 |   className,
+ 3396 |   ...props
+ 3397 | }: React.ComponentProps<typeof DropdownMenuContent>) {
+ 3398 |   return (
+ 3399 |     <DropdownMenuContent
+ 3400 |       data-slot="dropdown-menu-sub-content"
+ 3401 |       className={cn("w-auto min-w-[96px] rounded-lg bg-popover p-1 text-popover-foreground shadow-lg ring-1 ring-foreground/10 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
+ 3402 |       align={align}
+ 3403 |       alignOffset={alignOffset}
+ 3404 |       side={side}
+ 3405 |       sideOffset={sideOffset}
+ 3406 |       {...props}
+ 3407 |     />
+ 3408 |   )
+ 3409 | }
+ 3410 | 
+ 3411 | function DropdownMenuCheckboxItem({
+ 3412 |   className,
+ 3413 |   children,
+ 3414 |   checked,
+ 3415 |   inset,
+ 3416 |   ...props
+ 3417 | }: MenuPrimitive.CheckboxItem.Props & {
+ 3418 |   inset?: boolean
+ 3419 | }) {
+ 3420 |   return (
+ 3421 |     <MenuPrimitive.CheckboxItem
+ 3422 |       data-slot="dropdown-menu-checkbox-item"
+ 3423 |       data-inset={inset}
+ 3424 |       className={cn(
+ 3425 |         "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+ 3426 |         className
+ 3427 |       )}
+ 3428 |       checked={checked}
+ 3429 |       {...props}
+ 3430 |     >
+ 3431 |       <span
+ 3432 |         className="pointer-events-none absolute right-2 flex items-center justify-center"
+ 3433 |         data-slot="dropdown-menu-checkbox-item-indicator"
+ 3434 |       >
+ 3435 |         <MenuPrimitive.CheckboxItemIndicator>
+ 3436 |           <CheckIcon
+ 3437 |           />
+ 3438 |         </MenuPrimitive.CheckboxItemIndicator>
+ 3439 |       </span>
+ 3440 |       {children}
+ 3441 |     </MenuPrimitive.CheckboxItem>
+ 3442 |   )
+ 3443 | }
+ 3444 | 
+ 3445 | function DropdownMenuRadioGroup({ ...props }: MenuPrimitive.RadioGroup.Props) {
+ 3446 |   return (
+ 3447 |     <MenuPrimitive.RadioGroup
+ 3448 |       data-slot="dropdown-menu-radio-group"
+ 3449 |       {...props}
+ 3450 |     />
+ 3451 |   )
+ 3452 | }
+ 3453 | 
+ 3454 | function DropdownMenuRadioItem({
+ 3455 |   className,
+ 3456 |   children,
+ 3457 |   inset,
+ 3458 |   ...props
+ 3459 | }: MenuPrimitive.RadioItem.Props & {
+ 3460 |   inset?: boolean
+ 3461 | }) {
+ 3462 |   return (
+ 3463 |     <MenuPrimitive.RadioItem
+ 3464 |       data-slot="dropdown-menu-radio-item"
+ 3465 |       data-inset={inset}
+ 3466 |       className={cn(
+ 3467 |         "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+ 3468 |         className
+ 3469 |       )}
+ 3470 |       {...props}
+ 3471 |     >
+ 3472 |       <span
+ 3473 |         className="pointer-events-none absolute right-2 flex items-center justify-center"
+ 3474 |         data-slot="dropdown-menu-radio-item-indicator"
+ 3475 |       >
+ 3476 |         <MenuPrimitive.RadioItemIndicator>
+ 3477 |           <CheckIcon
+ 3478 |           />
+ 3479 |         </MenuPrimitive.RadioItemIndicator>
+ 3480 |       </span>
+ 3481 |       {children}
+ 3482 |     </MenuPrimitive.RadioItem>
+ 3483 |   )
+ 3484 | }
+ 3485 | 
+ 3486 | function DropdownMenuSeparator({
+ 3487 |   className,
+ 3488 |   ...props
+ 3489 | }: MenuPrimitive.Separator.Props) {
+ 3490 |   return (
+ 3491 |     <MenuPrimitive.Separator
+ 3492 |       data-slot="dropdown-menu-separator"
+ 3493 |       className={cn("-mx-1 my-1 h-px bg-border", className)}
+ 3494 |       {...props}
+ 3495 |     />
+ 3496 |   )
+ 3497 | }
+ 3498 | 
+ 3499 | function DropdownMenuShortcut({
+ 3500 |   className,
+ 3501 |   ...props
+ 3502 | }: React.ComponentProps<"span">) {
+ 3503 |   return (
+ 3504 |     <span
+ 3505 |       data-slot="dropdown-menu-shortcut"
+ 3506 |       className={cn(
+ 3507 |         "ml-auto text-xs tracking-widest text-muted-foreground group-focus/dropdown-menu-item:text-accent-foreground",
+ 3508 |         className
+ 3509 |       )}
+ 3510 |       {...props}
+ 3511 |     />
+ 3512 |   )
+ 3513 | }
+ 3514 | 
+ 3515 | export {
+ 3516 |   DropdownMenu,
+ 3517 |   DropdownMenuPortal,
+ 3518 |   DropdownMenuTrigger,
+ 3519 |   DropdownMenuContent,
+ 3520 |   DropdownMenuGroup,
+ 3521 |   DropdownMenuLabel,
+ 3522 |   DropdownMenuItem,
+ 3523 |   DropdownMenuCheckboxItem,
+ 3524 |   DropdownMenuRadioGroup,
+ 3525 |   DropdownMenuRadioItem,
+ 3526 |   DropdownMenuSeparator,
+ 3527 |   DropdownMenuShortcut,
+ 3528 |   DropdownMenuSub,
+ 3529 |   DropdownMenuSubTrigger,
+ 3530 |   DropdownMenuSubContent,
+ 3531 | }
+ 3532 | import * as React from "react"
+ 3533 | import { Input as InputPrimitive } from "@base-ui/react/input"
+ 3534 | 
+ 3535 | import { cn } from "@/lib/utils"
+ 3536 | 
+ 3537 | function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+ 3538 |   return (
+ 3539 |     <InputPrimitive
+ 3540 |       type={type}
+ 3541 |       data-slot="input"
+ 3542 |       className={cn(
+ 3543 |         "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+ 3544 |         className
+ 3545 |       )}
+ 3546 |       {...props}
+ 3547 |     />
+ 3548 |   )
+ 3549 | }
+ 3550 | 
+ 3551 | export { Input }
+ 3552 | "use client"
+ 3553 | 
+ 3554 | import * as React from "react"
+ 3555 | 
+ 3556 | import { cn } from "@/lib/utils"
+ 3557 | 
+ 3558 | function Label({ className, ...props }: React.ComponentProps<"label">) {
+ 3559 |   return (
+ 3560 |     <label
+ 3561 |       data-slot="label"
+ 3562 |       className={cn(
+ 3563 |         "flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50",
+ 3564 |         className
+ 3565 |       )}
+ 3566 |       {...props}
+ 3567 |     />
+ 3568 |   )
+ 3569 | }
+ 3570 | 
+ 3571 | export { Label }
+ 3572 | "use client"
+ 3573 | 
+ 3574 | import * as React from "react"
+ 3575 | import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area"
+ 3576 | 
+ 3577 | import { cn } from "@/lib/utils"
+ 3578 | 
+ 3579 | function ScrollArea({
+ 3580 |   className,
+ 3581 |   children,
+ 3582 |   ...props
+ 3583 | }: ScrollAreaPrimitive.Root.Props) {
+ 3584 |   return (
+ 3585 |     <ScrollAreaPrimitive.Root
+ 3586 |       data-slot="scroll-area"
+ 3587 |       className={cn("relative", className)}
+ 3588 |       {...props}
+ 3589 |     >
+ 3590 |       <ScrollAreaPrimitive.Viewport
+ 3591 |         data-slot="scroll-area-viewport"
+ 3592 |         className="size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1"
+ 3593 |       >
+ 3594 |         {children}
+ 3595 |       </ScrollAreaPrimitive.Viewport>
+ 3596 |       <ScrollBar />
+ 3597 |       <ScrollAreaPrimitive.Corner />
+ 3598 |     </ScrollAreaPrimitive.Root>
+ 3599 |   )
+ 3600 | }
+ 3601 | 
+ 3602 | function ScrollBar({
+ 3603 |   className,
+ 3604 |   orientation = "vertical",
+ 3605 |   ...props
+ 3606 | }: ScrollAreaPrimitive.Scrollbar.Props) {
+ 3607 |   return (
+ 3608 |     <ScrollAreaPrimitive.Scrollbar
+ 3609 |       data-slot="scroll-area-scrollbar"
+ 3610 |       data-orientation={orientation}
+ 3611 |       orientation={orientation}
+ 3612 |       className={cn(
+ 3613 |         "flex touch-none p-px transition-colors select-none data-horizontal:h-2.5 data-horizontal:flex-col data-horizontal:border-t data-horizontal:border-t-transparent data-vertical:h-full data-vertical:w-2.5 data-vertical:border-l data-vertical:border-l-transparent",
+ 3614 |         className
+ 3615 |       )}
+ 3616 |       {...props}
+ 3617 |     >
+ 3618 |       <ScrollAreaPrimitive.Thumb
+ 3619 |         data-slot="scroll-area-thumb"
+ 3620 |         className="relative flex-1 rounded-full bg-border"
+ 3621 |       />
+ 3622 |     </ScrollAreaPrimitive.Scrollbar>
+ 3623 |   )
+ 3624 | }
+ 3625 | 
+ 3626 | export { ScrollArea, ScrollBar }
+ 3627 | "use client"
+ 3628 | 
+ 3629 | import * as React from "react"
+ 3630 | import { Select as SelectPrimitive } from "@base-ui/react/select"
+ 3631 | 
+ 3632 | import { cn } from "@/lib/utils"
+ 3633 | import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react"
+ 3634 | 
+ 3635 | const Select = SelectPrimitive.Root
+ 3636 | 
+ 3637 | function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
+ 3638 |   return (
+ 3639 |     <SelectPrimitive.Group
+ 3640 |       data-slot="select-group"
+ 3641 |       className={cn("scroll-my-1 p-1", className)}
+ 3642 |       {...props}
+ 3643 |     />
+ 3644 |   )
+ 3645 | }
+ 3646 | 
+ 3647 | function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
+ 3648 |   return (
+ 3649 |     <SelectPrimitive.Value
+ 3650 |       data-slot="select-value"
+ 3651 |       className={cn("flex flex-1 text-left", className)}
+ 3652 |       {...props}
+ 3653 |     />
+ 3654 |   )
+ 3655 | }
+ 3656 | 
+ 3657 | function SelectTrigger({
+ 3658 |   className,
+ 3659 |   size = "default",
+ 3660 |   children,
+ 3661 |   ...props
+ 3662 | }: SelectPrimitive.Trigger.Props & {
+ 3663 |   size?: "sm" | "default"
+ 3664 | }) {
+ 3665 |   return (
+ 3666 |     <SelectPrimitive.Trigger
+ 3667 |       data-slot="select-trigger"
+ 3668 |       data-size={size}
+ 3669 |       className={cn(
+ 3670 |         "flex w-fit items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-2 pl-2.5 text-sm whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground data-[size=default]:h-8 data-[size=sm]:h-7 data-[size=sm]:rounded-[min(var(--radius-md),10px)] *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+ 3671 |         className
+ 3672 |       )}
+ 3673 |       {...props}
+ 3674 |     >
+ 3675 |       {children}
+ 3676 |       <SelectPrimitive.Icon
+ 3677 |         render={
+ 3678 |           <ChevronDownIcon className="pointer-events-none size-4 text-muted-foreground" />
+ 3679 |         }
+ 3680 |       />
+ 3681 |     </SelectPrimitive.Trigger>
+ 3682 |   )
+ 3683 | }
+ 3684 | 
+ 3685 | function SelectContent({
+ 3686 |   className,
+ 3687 |   children,
+ 3688 |   side = "bottom",
+ 3689 |   sideOffset = 4,
+ 3690 |   align = "center",
+ 3691 |   alignOffset = 0,
+ 3692 |   alignItemWithTrigger = true,
+ 3693 |   ...props
+ 3694 | }: SelectPrimitive.Popup.Props &
+ 3695 |   Pick<
+ 3696 |     SelectPrimitive.Positioner.Props,
+ 3697 |     "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger"
+ 3698 |   >) {
+ 3699 |   return (
+ 3700 |     <SelectPrimitive.Portal>
+ 3701 |       <SelectPrimitive.Positioner
+ 3702 |         side={side}
+ 3703 |         sideOffset={sideOffset}
+ 3704 |         align={align}
+ 3705 |         alignOffset={alignOffset}
+ 3706 |         alignItemWithTrigger={alignItemWithTrigger}
+ 3707 |         className="isolate z-50"
+ 3708 |       >
+ 3709 |         <SelectPrimitive.Popup
+ 3710 |           data-slot="select-content"
+ 3711 |           data-align-trigger={alignItemWithTrigger}
+ 3712 |           className={cn("relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
+ 3713 |           {...props}
+ 3714 |         >
+ 3715 |           <SelectScrollUpButton />
+ 3716 |           <SelectPrimitive.List>{children}</SelectPrimitive.List>
+ 3717 |           <SelectScrollDownButton />
+ 3718 |         </SelectPrimitive.Popup>
+ 3719 |       </SelectPrimitive.Positioner>
+ 3720 |     </SelectPrimitive.Portal>
+ 3721 |   )
+ 3722 | }
+ 3723 | 
+ 3724 | function SelectLabel({
+ 3725 |   className,
+ 3726 |   ...props
+ 3727 | }: SelectPrimitive.GroupLabel.Props) {
+ 3728 |   return (
+ 3729 |     <SelectPrimitive.GroupLabel
+ 3730 |       data-slot="select-label"
+ 3731 |       className={cn("px-1.5 py-1 text-xs text-muted-foreground", className)}
+ 3732 |       {...props}
+ 3733 |     />
+ 3734 |   )
+ 3735 | }
+ 3736 | 
+ 3737 | function SelectItem({
+ 3738 |   className,
+ 3739 |   children,
+ 3740 |   ...props
+ 3741 | }: SelectPrimitive.Item.Props) {
+ 3742 |   return (
+ 3743 |     <SelectPrimitive.Item
+ 3744 |       data-slot="select-item"
+ 3745 |       className={cn(
+ 3746 |         "relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+ 3747 |         className
+ 3748 |       )}
+ 3749 |       {...props}
+ 3750 |     >
+ 3751 |       <SelectPrimitive.ItemText className="flex flex-1 shrink-0 gap-2 whitespace-nowrap">
+ 3752 |         {children}
+ 3753 |       </SelectPrimitive.ItemText>
+ 3754 |       <SelectPrimitive.ItemIndicator
+ 3755 |         render={
+ 3756 |           <span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center" />
+ 3757 |         }
+ 3758 |       >
+ 3759 |         <CheckIcon className="pointer-events-none" />
+ 3760 |       </SelectPrimitive.ItemIndicator>
+ 3761 |     </SelectPrimitive.Item>
+ 3762 |   )
+ 3763 | }
+ 3764 | 
+ 3765 | function SelectSeparator({
+ 3766 |   className,
+ 3767 |   ...props
+ 3768 | }: SelectPrimitive.Separator.Props) {
+ 3769 |   return (
+ 3770 |     <SelectPrimitive.Separator
+ 3771 |       data-slot="select-separator"
+ 3772 |       className={cn("pointer-events-none -mx-1 my-1 h-px bg-border", className)}
+ 3773 |       {...props}
+ 3774 |     />
+ 3775 |   )
+ 3776 | }
+ 3777 | 
+ 3778 | function SelectScrollUpButton({
+ 3779 |   className,
+ 3780 |   ...props
+ 3781 | }: React.ComponentProps<typeof SelectPrimitive.ScrollUpArrow>) {
+ 3782 |   return (
+ 3783 |     <SelectPrimitive.ScrollUpArrow
+ 3784 |       data-slot="select-scroll-up-button"
+ 3785 |       className={cn(
+ 3786 |         "top-0 z-10 flex w-full cursor-default items-center justify-center bg-popover py-1 [&_svg:not([class*='size-'])]:size-4",
+ 3787 |         className
+ 3788 |       )}
+ 3789 |       {...props}
+ 3790 |     >
+ 3791 |       <ChevronUpIcon
+ 3792 |       />
+ 3793 |     </SelectPrimitive.ScrollUpArrow>
+ 3794 |   )
+ 3795 | }
+ 3796 | 
+ 3797 | function SelectScrollDownButton({
+ 3798 |   className,
+ 3799 |   ...props
+ 3800 | }: React.ComponentProps<typeof SelectPrimitive.ScrollDownArrow>) {
+ 3801 |   return (
+ 3802 |     <SelectPrimitive.ScrollDownArrow
+ 3803 |       data-slot="select-scroll-down-button"
+ 3804 |       className={cn(
+ 3805 |         "bottom-0 z-10 flex w-full cursor-default items-center justify-center bg-popover py-1 [&_svg:not([class*='size-'])]:size-4",
+ 3806 |         className
+ 3807 |       )}
+ 3808 |       {...props}
+ 3809 |     >
+ 3810 |       <ChevronDownIcon
+ 3811 |       />
+ 3812 |     </SelectPrimitive.ScrollDownArrow>
+ 3813 |   )
+ 3814 | }
+ 3815 | 
+ 3816 | export {
+ 3817 |   Select,
+ 3818 |   SelectContent,
+ 3819 |   SelectGroup,
+ 3820 |   SelectItem,
+ 3821 |   SelectLabel,
+ 3822 |   SelectScrollDownButton,
+ 3823 |   SelectScrollUpButton,
+ 3824 |   SelectSeparator,
+ 3825 |   SelectTrigger,
+ 3826 |   SelectValue,
+ 3827 | }
+ 3828 | "use client"
+ 3829 | 
+ 3830 | import { Separator as SeparatorPrimitive } from "@base-ui/react/separator"
+ 3831 | 
+ 3832 | import { cn } from "@/lib/utils"
+ 3833 | 
+ 3834 | function Separator({
+ 3835 |   className,
+ 3836 |   orientation = "horizontal",
+ 3837 |   ...props
+ 3838 | }: SeparatorPrimitive.Props) {
+ 3839 |   return (
+ 3840 |     <SeparatorPrimitive
+ 3841 |       data-slot="separator"
+ 3842 |       orientation={orientation}
+ 3843 |       className={cn(
+ 3844 |         "shrink-0 bg-border data-horizontal:h-px data-horizontal:w-full data-vertical:w-px data-vertical:self-stretch",
+ 3845 |         className
+ 3846 |       )}
+ 3847 |       {...props}
+ 3848 |     />
+ 3849 |   )
+ 3850 | }
+ 3851 | 
+ 3852 | export { Separator }
+ 3853 | "use client"
+ 3854 | 
+ 3855 | import * as React from "react"
+ 3856 | import { Dialog as SheetPrimitive } from "@base-ui/react/dialog"
+ 3857 | 
+ 3858 | import { cn } from "@/lib/utils"
+ 3859 | import { Button } from "@/components/ui/button"
+ 3860 | import { XIcon } from "lucide-react"
+ 3861 | 
+ 3862 | function Sheet({ ...props }: SheetPrimitive.Root.Props) {
+ 3863 |   return <SheetPrimitive.Root data-slot="sheet" {...props} />
+ 3864 | }
+ 3865 | 
+ 3866 | function SheetTrigger({ ...props }: SheetPrimitive.Trigger.Props) {
+ 3867 |   return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />
+ 3868 | }
+ 3869 | 
+ 3870 | function SheetClose({ ...props }: SheetPrimitive.Close.Props) {
+ 3871 |   return <SheetPrimitive.Close data-slot="sheet-close" {...props} />
+ 3872 | }
+ 3873 | 
+ 3874 | function SheetPortal({ ...props }: SheetPrimitive.Portal.Props) {
+ 3875 |   return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />
+ 3876 | }
+ 3877 | 
+ 3878 | function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {
+ 3879 |   return (
+ 3880 |     <SheetPrimitive.Backdrop
+ 3881 |       data-slot="sheet-overlay"
+ 3882 |       className={cn(
+ 3883 |         "fixed inset-0 z-50 bg-black/10 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 supports-backdrop-filter:backdrop-blur-xs",
+ 3884 |         className
+ 3885 |       )}
+ 3886 |       {...props}
+ 3887 |     />
+ 3888 |   )
+ 3889 | }
+ 3890 | 
+ 3891 | function SheetContent({
+ 3892 |   className,
+ 3893 |   children,
+ 3894 |   side = "right",
+ 3895 |   showCloseButton = true,
+ 3896 |   ...props
+ 3897 | }: SheetPrimitive.Popup.Props & {
+ 3898 |   side?: "top" | "right" | "bottom" | "left"
+ 3899 |   showCloseButton?: boolean
+ 3900 | }) {
+ 3901 |   return (
+ 3902 |     <SheetPortal>
+ 3903 |       <SheetOverlay />
+ 3904 |       <SheetPrimitive.Popup
+ 3905 |         data-slot="sheet-content"
+ 3906 |         data-side={side}
+ 3907 |         className={cn(
+ 3908 |           "fixed z-50 flex flex-col gap-4 bg-popover bg-clip-padding text-sm text-popover-foreground shadow-lg transition duration-200 ease-in-out data-ending-style:opacity-0 data-starting-style:opacity-0 data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-auto data-[side=bottom]:border-t data-[side=bottom]:data-ending-style:translate-y-[2.5rem] data-[side=bottom]:data-starting-style:translate-y-[2.5rem] data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:h-full data-[side=left]:w-3/4 data-[side=left]:border-r data-[side=left]:data-ending-style:translate-x-[-2.5rem] data-[side=left]:data-starting-style:translate-x-[-2.5rem] data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:h-full data-[side=right]:w-3/4 data-[side=right]:border-l data-[side=right]:data-ending-style:translate-x-[2.5rem] data-[side=right]:data-starting-style:translate-x-[2.5rem] data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:h-auto data-[side=top]:border-b data-[side=top]:data-ending-style:translate-y-[-2.5rem] data-[side=top]:data-starting-style:translate-y-[-2.5rem] data-[side=left]:sm:max-w-sm data-[side=right]:sm:max-w-sm",
+ 3909 |           className
+ 3910 |         )}
+ 3911 |         {...props}
+ 3912 |       >
+ 3913 |         {children}
+ 3914 |         {showCloseButton && (
+ 3915 |           <SheetPrimitive.Close
+ 3916 |             data-slot="sheet-close"
+ 3917 |             render={
+ 3918 |               <Button
+ 3919 |                 variant="ghost"
+ 3920 |                 className="absolute top-3 right-3"
+ 3921 |                 size="icon-sm"
+ 3922 |               />
+ 3923 |             }
+ 3924 |           >
+ 3925 |             <XIcon
+ 3926 |             />
+ 3927 |             <span className="sr-only">Close</span>
+ 3928 |           </SheetPrimitive.Close>
+ 3929 |         )}
+ 3930 |       </SheetPrimitive.Popup>
+ 3931 |     </SheetPortal>
+ 3932 |   )
+ 3933 | }
+ 3934 | 
+ 3935 | function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
+ 3936 |   return (
+ 3937 |     <div
+ 3938 |       data-slot="sheet-header"
+ 3939 |       className={cn("flex flex-col gap-0.5 p-4", className)}
+ 3940 |       {...props}
+ 3941 |     />
+ 3942 |   )
+ 3943 | }
+ 3944 | 
+ 3945 | function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
+ 3946 |   return (
+ 3947 |     <div
+ 3948 |       data-slot="sheet-footer"
+ 3949 |       className={cn("mt-auto flex flex-col gap-2 p-4", className)}
+ 3950 |       {...props}
+ 3951 |     />
+ 3952 |   )
+ 3953 | }
+ 3954 | 
+ 3955 | function SheetTitle({ className, ...props }: SheetPrimitive.Title.Props) {
+ 3956 |   return (
+ 3957 |     <SheetPrimitive.Title
+ 3958 |       data-slot="sheet-title"
+ 3959 |       className={cn(
+ 3960 |         "font-heading text-base font-medium text-foreground",
+ 3961 |         className
+ 3962 |       )}
+ 3963 |       {...props}
+ 3964 |     />
+ 3965 |   )
+ 3966 | }
+ 3967 | 
+ 3968 | function SheetDescription({
+ 3969 |   className,
+ 3970 |   ...props
+ 3971 | }: SheetPrimitive.Description.Props) {
+ 3972 |   return (
+ 3973 |     <SheetPrimitive.Description
+ 3974 |       data-slot="sheet-description"
+ 3975 |       className={cn("text-sm text-muted-foreground", className)}
+ 3976 |       {...props}
+ 3977 |     />
+ 3978 |   )
+ 3979 | }
+ 3980 | 
+ 3981 | export {
+ 3982 |   Sheet,
+ 3983 |   SheetTrigger,
+ 3984 |   SheetClose,
+ 3985 |   SheetContent,
+ 3986 |   SheetHeader,
+ 3987 |   SheetFooter,
+ 3988 |   SheetTitle,
+ 3989 |   SheetDescription,
+ 3990 | }
+ 3991 | import { cn } from "@/lib/utils"
+ 3992 | 
+ 3993 | function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
+ 3994 |   return (
+ 3995 |     <div
+ 3996 |       data-slot="skeleton"
+ 3997 |       className={cn("animate-pulse rounded-md bg-muted", className)}
+ 3998 |       {...props}
+ 3999 |     />
+ 4000 |   )
+ 4001 | }
+ 4002 | 
+ 4003 | export { Skeleton }
+ 4004 | import * as React from "react"
+ 4005 | 
+ 4006 | import { cn } from "@/lib/utils"
+ 4007 | 
+ 4008 | function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
+ 4009 |   return (
+ 4010 |     <textarea
+ 4011 |       data-slot="textarea"
+ 4012 |       className={cn(
+ 4013 |         "flex field-sizing-content min-h-16 w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+ 4014 |         className
+ 4015 |       )}
+ 4016 |       {...props}
+ 4017 |     />
+ 4018 |   )
+ 4019 | }
+ 4020 | 
+ 4021 | export { Textarea }
+ 4022 | "use client"
+ 4023 | 
+ 4024 | import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"
+ 4025 | 
+ 4026 | import { cn } from "@/lib/utils"
+ 4027 | 
+ 4028 | function TooltipProvider({
+ 4029 |   delay = 0,
+ 4030 |   ...props
+ 4031 | }: TooltipPrimitive.Provider.Props) {
+ 4032 |   return (
+ 4033 |     <TooltipPrimitive.Provider
+ 4034 |       data-slot="tooltip-provider"
+ 4035 |       delay={delay}
+ 4036 |       {...props}
+ 4037 |     />
+ 4038 |   )
+ 4039 | }
+ 4040 | 
+ 4041 | function Tooltip({ ...props }: TooltipPrimitive.Root.Props) {
+ 4042 |   return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+ 4043 | }
+ 4044 | 
+ 4045 | function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {
+ 4046 |   return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
+ 4047 | }
+ 4048 | 
+ 4049 | function TooltipContent({
+ 4050 |   className,
+ 4051 |   side = "top",
+ 4052 |   sideOffset = 4,
+ 4053 |   align = "center",
+ 4054 |   alignOffset = 0,
+ 4055 |   children,
+ 4056 |   ...props
+ 4057 | }: TooltipPrimitive.Popup.Props &
+ 4058 |   Pick<
+ 4059 |     TooltipPrimitive.Positioner.Props,
+ 4060 |     "align" | "alignOffset" | "side" | "sideOffset"
+ 4061 |   >) {
+ 4062 |   return (
+ 4063 |     <TooltipPrimitive.Portal>
+ 4064 |       <TooltipPrimitive.Positioner
+ 4065 |         align={align}
+ 4066 |         alignOffset={alignOffset}
+ 4067 |         side={side}
+ 4068 |         sideOffset={sideOffset}
+ 4069 |         className="isolate z-50"
+ 4070 |       >
+ 4071 |         <TooltipPrimitive.Popup
+ 4072 |           data-slot="tooltip-content"
+ 4073 |           className={cn(
+ 4074 |             "z-50 inline-flex w-fit max-w-xs origin-(--transform-origin) items-center gap-1.5 rounded-md bg-foreground px-3 py-1.5 text-xs text-background has-data-[slot=kbd]:pr-1.5 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 **:data-[slot=kbd]:relative **:data-[slot=kbd]:isolate **:data-[slot=kbd]:z-50 **:data-[slot=kbd]:rounded-sm data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-[state=delayed-open]:zoom-in-95 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+ 4075 |             className
+ 4076 |           )}
+ 4077 |           {...props}
+ 4078 |         >
+ 4079 |           {children}
+ 4080 |           <TooltipPrimitive.Arrow className="z-50 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-[2px] bg-foreground fill-foreground data-[side=bottom]:top-1 data-[side=inline-end]:top-1/2! data-[side=inline-end]:-left-1 data-[side=inline-end]:-translate-y-1/2 data-[side=inline-start]:top-1/2! data-[side=inline-start]:-right-1 data-[side=inline-start]:-translate-y-1/2 data-[side=left]:top-1/2! data-[side=left]:-right-1 data-[side=left]:-translate-y-1/2 data-[side=right]:top-1/2! data-[side=right]:-left-1 data-[side=right]:-translate-y-1/2 data-[side=top]:-bottom-2.5" />
+ 4081 |         </TooltipPrimitive.Popup>
+ 4082 |       </TooltipPrimitive.Positioner>
+ 4083 |     </TooltipPrimitive.Portal>
+ 4084 |   )
+ 4085 | }
+ 4086 | 
+ 4087 | export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+ 4088 | import { PrismaClient } from "@/generated/prisma/client";
+ 4089 | import { PrismaLibSql } from "@prisma/adapter-libsql";
+ 4090 | 
+ 4091 | const adapter = new PrismaLibSql({
+ 4092 |   url: "libsql://pm-tool-good-brother-di.aws-ap-northeast-1.turso.io",
+ 4093 |   authToken: "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODE1OTY1NjcsImlkIjoiMDE5ZWNmNmQtNTkwMS03ZThjLTg0ZTgtMzc0NDY2ZDg2YTExIiwicmlkIjoiMmY1OGMzYjQtZmFkYS00OWYyLTgxNmQtM2FjNWM0M2Q5ZTJhIn0.K4R8hxYOAhsaXn6-o1YH6W4PCaMdaTN9BIAvQU2bpqXfi8CNOcT3pb0QjMEyoXQtS3pxuRTTvfqFmm4DVVQhAg",
+ 4094 | });
+ 4095 | 
+ 4096 | const globalForPrisma = globalThis as unknown as {
+ 4097 |   prisma: PrismaClient | undefined;
+ 4098 | };
+ 4099 | 
+ 4100 | export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter });
+ 4101 | 
+ 4102 | if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+ 4103 | import { clsx, type ClassValue } from "clsx"
+ 4104 | import { twMerge } from "tailwind-merge"
+ 4105 | 
+ 4106 | export function cn(...inputs: ClassValue[]) {
+ 4107 |   return twMerge(clsx(inputs))
+ 4108 | }
+ 4109 | export interface Project {
+ 4110 |   id: string;
+ 4111 |   name: string;
+ 4112 |   description: string | null;
+ 4113 |   color: string;
+ 4114 |   status: string;
+ 4115 |   createdAt: string;
+ 4116 |   updatedAt: string;
+ 4117 |   _count?: { tasks: number };
+ 4118 |   tasks?: Task[];
+ 4119 | }
+ 4120 | 
+ 4121 | export interface Task {
+ 4122 |   id: string;
+ 4123 |   title: string;
+ 4124 |   description: string | null;
+ 4125 |   status: "todo" | "in_progress" | "blocked" | "done";
+ 4126 |   priority: "low" | "medium" | "high" | "urgent";
+ 4127 |   dueDate: string | null;
+ 4128 |   tags: string;
+ 4129 |   sortOrder: number;
+ 4130 |   projectId: string;
+ 4131 |   createdAt: string;
+ 4132 |   updatedAt: string;
+ 4133 | }
+ 4134 | 
+ 4135 | export const STATUS_LABELS: Record<Task["status"], string> = {
+ 4136 |   todo: "待办",
+ 4137 |   in_progress: "进行中",
+ 4138 |   blocked: "阻塞",
+ 4139 |   done: "已完成",
+ 4140 | };
+ 4141 | 
+ 4142 | export const PRIORITY_LABELS: Record<Task["priority"], string> = {
+ 4143 |   low: "低",
+ 4144 |   medium: "中",
+ 4145 |   high: "高",
+ 4146 |   urgent: "紧急",
+ 4147 | };
+ 4148 | 
+ 4149 | export const PRIORITY_COLORS: Record<Task["priority"], string> = {
+ 4150 |   low: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
+ 4151 |   medium: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+ 4152 |   high: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300",
+ 4153 |   urgent: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300",
+ 4154 | };
+ 4155 | 
+ 4156 | export const PRIORITY_COLORS_FALLBACK = "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300";
