@@ -6,29 +6,51 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-function getDatabaseUrl(): string {
-  let url = process.env.DATABASE_URL;
-  if (!url || !url.trim()) {
+type DbConfig = {
+  url: string;
+  authToken?: string;
+};
+
+function getDatabaseConfig(): DbConfig {
+  let url = process.env.DATABASE_URL?.trim();
+
+  if (!url) {
     // Default: local SQLite
     const dbPath = path.resolve(process.cwd(), "prisma", "pm-tool.db");
-    return `file:${dbPath}`;
-  }
-  url = url.trim();
-
-  // If a separate auth token is provided and URL doesn't already have one,
-  // append it as a query parameter
-  const authToken = process.env.DATABASE_AUTH_TOKEN?.trim();
-  if (authToken && !url.includes("authToken=")) {
-    const sep = url.includes("?") ? "&" : "?";
-    url = `${url}${sep}authToken=${authToken}`;
+    return { url: `file:${dbPath}` };
   }
 
-  return url;
+  // Prefer explicitly configured token, but also support authToken embedded in DATABASE_URL.
+  let authToken = process.env.DATABASE_AUTH_TOKEN?.trim();
+
+  if (url.includes("authToken=")) {
+    try {
+      const parsed = new URL(url);
+      const tokenFromUrl = parsed.searchParams.get("authToken") || undefined;
+      if (!authToken && tokenFromUrl) authToken = tokenFromUrl;
+
+      // PrismaLibSql expects authToken as a separate option; remove it from URL.
+      parsed.searchParams.delete("authToken");
+      const query = parsed.searchParams.toString();
+      url = `${parsed.protocol}//${parsed.host}${parsed.pathname}${query ? `?${query}` : ""}`;
+    } catch {
+      // Fallback for libsql URLs that URL() cannot parse in some runtimes.
+      const [base, queryString] = url.split("?");
+      const params = new URLSearchParams(queryString || "");
+      const tokenFromUrl = params.get("authToken") || undefined;
+      if (!authToken && tokenFromUrl) authToken = tokenFromUrl;
+      params.delete("authToken");
+      const query = params.toString();
+      url = `${base}${query ? `?${query}` : ""}`;
+    }
+  }
+
+  return authToken ? { url, authToken } : { url };
 }
 
 function createPrismaClient(): PrismaClient {
-  const dbUrl = getDatabaseUrl();
-  const adapter = new PrismaLibSql({ url: dbUrl });
+  const config = getDatabaseConfig();
+  const adapter = new PrismaLibSql(config);
   return new PrismaClient({ adapter });
 }
 
