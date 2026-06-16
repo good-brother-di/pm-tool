@@ -10,14 +10,23 @@ function getDatabaseUrl(): string {
   const url = process.env.DATABASE_URL;
   if (url && url.trim()) return url.trim();
 
-  // Default: local SQLite — use absolute path for libSQL compatibility
+  // Default: local SQLite
   const dbPath = path.resolve(process.cwd(), "prisma", "pm-tool.db");
   return `file:${dbPath}`;
 }
 
+function getAuthToken(): string | undefined {
+  return process.env.DATABASE_AUTH_TOKEN || undefined;
+}
+
 function createPrismaClient(): PrismaClient {
   const dbUrl = getDatabaseUrl();
-  const adapter = new PrismaLibSql({ url: dbUrl });
+  const authToken = getAuthToken();
+
+  const adapter = authToken
+    ? new PrismaLibSql({ url: dbUrl, authToken })
+    : new PrismaLibSql({ url: dbUrl });
+
   return new PrismaClient({ adapter });
 }
 
